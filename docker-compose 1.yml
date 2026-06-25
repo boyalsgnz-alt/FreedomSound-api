@@ -1,0 +1,21 @@
+services:
+
+  # This service is optional, I just like having an interface to see the db
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+
+  db:
+    image: mysql:9.7
+    restart: always
+    environment:
+      MYSQL_USER: your-db-username
+      MYSQL_PASSWORD: your-db-password
+      MYSQL_ROOT_PASSWORD: your-db-root-password
+      MYSQL_DATABASE: your-db-name
+    ports:
+      - "portmapping:portmapping"
+
+# Replace fields where necessary and rename this file docker-compose.yml
