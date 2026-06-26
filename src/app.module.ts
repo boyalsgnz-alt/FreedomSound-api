@@ -7,6 +7,11 @@ import { TrackService } from './tracks/track.service';
 import { SoundcloudInterfaceController } from './soundcloud-interface/scinterface.controller';
 import { SoundcloudInterfaceService } from './soundcloud-interface/scinterface.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { TrackSource } from './tracksources/tracksource.entity';
+import { Track } from './tracks/track.entity';
+import { Artist } from './artists/artist.entity';
+import { Tag } from './tags/tag.entity';
+import { SoundcloudInterfaceModule } from './soundcloud-interface/scinterface.module';
 
 @Module({
   imports: [
@@ -20,13 +25,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         username: configService.getOrThrow<string>('MYSQL_USER'),
         password: configService.getOrThrow<string>('MYSQL_PASSWORD'),
         database: configService.getOrThrow<string>('MYSQL_ROOT_DBNAME'),
-        entities: [],
+        entities: [TrackSource, Track, Artist, Tag],
         synchronize: true,
       }),
       inject: [ConfigService],
     }),
+    SoundcloudInterfaceModule,
   ],
-  controllers: [AppController, TrackController, SoundcloudInterfaceController],
-  providers: [AppService, TrackService, SoundcloudInterfaceService],
+  controllers: [AppController, TrackController],
+  providers: [AppService, TrackService],
 })
 export class AppModule {}

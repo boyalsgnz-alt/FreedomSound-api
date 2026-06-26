@@ -6,9 +6,12 @@ export class Tag {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ default: '', unique: true })
   name: string;
 
   @ManyToMany(() => Track, (track) => track.tags)
   tracks: Track[];
+
+  @Column({ type: 'boolean', default: true })
+  user_vetted = false;
 }

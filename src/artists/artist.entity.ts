@@ -6,9 +6,12 @@ export class Artist {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ unique: true })
   name: string;
 
   @ManyToMany(() => Track, (track) => track.artists)
   tracks: string;
+
+  @Column({ type: 'boolean', default: true })
+  user_vetted = false;
 }

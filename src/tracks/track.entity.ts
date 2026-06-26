@@ -16,14 +16,14 @@ export class Track {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  fileName: string;
+  @Column({ default: '' })
+  fileName?: string;
 
   @Column()
   title: string;
 
-  @Column()
-  hash: string;
+  @Column({ default: '' })
+  hash?: string;
 
   @Column({ nullable: true })
   duration: number;
@@ -41,4 +41,7 @@ export class Track {
 
   @OneToMany(() => TrackSource, (source) => source.track)
   sources: TrackSource[];
+
+  @Column({ type: 'boolean', default: true })
+  user_vetted = false;
 }
