@@ -1,4 +1,4 @@
-import { Injectable, Query } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Tag } from './tag.entity';
@@ -24,5 +24,28 @@ export class TagService {
 
   async getById(id: number): Promise<Tag | null> {
     return await this.tagRepo.findOneBy({ id: id });
+  }
+
+  async getOrCreateTag(tagDto: Partial<Tag>): Promise<Tag> {
+    let tag: Tag | null;
+    tag = await this.tagRepo.findOneBy({ name: tagDto.name });
+    if (!tag) {
+      tag = await this.tagRepo.save(tagDto);
+    }
+    return tag;
+  }
+
+  async removeTag(id: number): Promise<boolean> {
+    const tag = await this.tagRepo.findOne({
+      where: { id },
+      relations: { tracks: true },
+    });
+    if (tag) {
+      tag.tracks = [];
+      await this.tagRepo.save(tag);
+      await this.tagRepo.remove(tag);
+      return true;
+    }
+    return false;
   }
 }

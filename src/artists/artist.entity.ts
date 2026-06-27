@@ -10,7 +10,7 @@ export class Artist {
   name: string;
 
   @ManyToMany(() => Track, (track) => track.artists)
-  tracks: string;
+  tracks: Track[];
 
   @Column({ type: 'boolean', default: true })
   user_vetted = false;

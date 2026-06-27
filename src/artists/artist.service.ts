@@ -22,7 +22,21 @@ export class ArtistService {
     });
   }
 
-  async getById(id: string): Promise<Artist | null> {
-    return await this.artistRepo.findOneBy({ id: Number(id) });
+  async getById(id: number): Promise<Artist | null> {
+    return await this.artistRepo.findOneBy({ id });
+  }
+
+  async deleteArtistById(id: number): Promise<boolean> {
+    const artist = await this.artistRepo.findOne({
+      where: { id },
+      relations: { tracks: true },
+    });
+    if (artist) {
+      artist.tracks = [];
+      await this.artistRepo.save(artist);
+      await this.artistRepo.delete(artist);
+      return true;
+    }
+    return false;
   }
 }

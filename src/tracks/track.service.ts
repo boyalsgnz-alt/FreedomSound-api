@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Track } from './track.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Tag } from '../tags/tag.entity';
 
 @Injectable()
 export class TrackService {
