@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Artist } from './artist.entity';
+import { ArtistDto } from './artist.dto';
 
 @Injectable()
 export class ArtistService {
@@ -38,5 +39,17 @@ export class ArtistService {
       return true;
     }
     return false;
+  }
+
+  async patchArtistById(
+    id: number,
+    artistDto: ArtistDto,
+  ): Promise<Artist | null> {
+    let artist = await this.getById(id);
+    if (artist) {
+      artist = { ...artist, ...artistDto };
+      await this.artistRepo.save(artist);
+    }
+    return artist;
   }
 }

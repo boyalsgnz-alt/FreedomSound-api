@@ -48,4 +48,13 @@ export class TagService {
     }
     return false;
   }
+
+  async updateTag(id: number, tagDto: Partial<Tag>): Promise<Tag | null> {
+    let tag = await this.tagRepo.findOneBy({ id: id });
+    if (tag) {
+      tag = { ...tag, ...tagDto };
+      await this.tagRepo.save(tag);
+    }
+    return tag;
+  }
 }

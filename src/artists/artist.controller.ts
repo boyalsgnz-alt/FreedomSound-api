@@ -1,14 +1,18 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
   HttpException,
   HttpStatus,
   Param,
+  Patch,
   Query,
 } from '@nestjs/common';
 import { Artist } from './artist.entity';
 import { ArtistService } from './artist.service';
+import { StringToNumberarrayPipePipe } from '../common/string-to-numberarray.pipe';
+import type { ArtistDto } from './artist.dto';
 
 @Controller('artists')
 export class ArtistController {
@@ -57,5 +61,50 @@ export class ArtistController {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
     return true;
+  }
+
+  /**
+   * Removes Artist[] by their IDs and cleans up the relations, if any
+   *
+   * @param ids - The IDs of Artists to be removed
+   * @returns a message of how many Artist have been deleted and a number[] containing the IDs not deleted, if any
+   */
+  @Delete()
+  async deleteArtists(
+    @Query('ids', StringToNumberarrayPipePipe) ids: number[],
+  ): Promise<object> {
+    const notDeleted: number[] = [];
+    for (const artistId of ids) {
+      const isDeleted = await this.artistService.deleteArtistById(artistId);
+      if (!isDeleted) {
+        notDeleted.push(artistId);
+      }
+    }
+    return {
+      message: `Deleted ${ids.length - notDeleted.length} out of ${ids.length} artists`,
+      ...(notDeleted.length > 0 ? { notDeleted } : {}),
+    };
+  }
+
+  /**
+   * Patches a Artist by its ID.
+   *
+   * @param params - The ID of the Artist to be patched
+   * @param artistDto - The DTO containing the fields/values to be patched
+   * @returns the newly modified Tag if it has been found & modified, throws NOT_FOUND otherwise
+   */
+  @Patch(':id')
+  async updateArtistById(
+    @Param() params: { id: number },
+    @Body() artistDto: ArtistDto,
+  ): Promise<object> {
+    const artist = await this.artistService.patchArtistById(
+      params.id,
+      artistDto,
+    );
+    if (!artist) {
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+    return artist;
   }
 }

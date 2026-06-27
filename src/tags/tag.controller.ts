@@ -6,11 +6,14 @@ import {
   HttpException,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
 import { TagService } from './tag.service';
 import { Tag } from './tag.entity';
+import { StringToNumberarrayPipePipe } from '../common/string-to-numberarray.pipe';
+import type { TagDto } from './tag.dto';
 
 @Controller('tags')
 export class TagController {
@@ -62,7 +65,7 @@ export class TagController {
    * Remove a Tag by its ID and cleans up the relations, if any.
    *
    * @param params - Parameter in the request path, here, /:id
-   * @returns true if the Tag has successfully been removed, throws NOT_FOUND if Tag was not found.
+   * @returns true if the Tag has successfully been removed, throws NOT_FOUND otherwise
    */
   @Delete(':id')
   async deleteTag(@Param() params: { id: number }): Promise<boolean> {
@@ -71,5 +74,47 @@ export class TagController {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
     return true;
+  }
+
+  /**
+   * Removes Tag[] by their IDs and cleans up the relations, if any.
+   *
+   * @param ids - A comma-separated list of IDs
+   * @returns a message of how many Tag have been deleted and a number[] containing the IDs not deleted, if any
+   */
+  @Delete()
+  async deleteTags(
+    @Query('ids', StringToNumberarrayPipePipe) ids: number[],
+  ): Promise<object> {
+    const notDeleted: number[] = [];
+    for (const tagId of ids) {
+      const isDeleted = await this.tagService.removeTag(tagId);
+      if (!isDeleted) {
+        notDeleted.push(tagId);
+      }
+    }
+    return {
+      message: `Deleted ${ids.length - notDeleted.length} out of ${ids.length} tags`,
+      ...(notDeleted.length > 0 ? { notDeleted } : {}),
+    };
+  }
+
+  /**
+   * Patches a Tag by its ID.
+   *
+   * @param params - The ID of the Tag to be patched
+   * @param tagDto - The DTO containing the fields/values to be patched
+   * @returns the newly modified Tag if it has been found & modified, throws NOT_FOUND otherwise
+   */
+  @Patch(':id')
+  async patchTagById(
+    @Param() params: { id: number },
+    @Body() tagDto: TagDto,
+  ): Promise<Tag> {
+    const tag = await this.tagService.updateTag(params.id, tagDto);
+    if (!tag) {
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+    return tag;
   }
 }
