@@ -4,14 +4,14 @@ import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TrackController } from './tracks/track.controller';
 import { TrackService } from './tracks/track.service';
-import { SoundcloudInterfaceController } from './soundcloud-interface/scinterface.controller';
-import { SoundcloudInterfaceService } from './soundcloud-interface/scinterface.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TrackSource } from './tracksources/tracksource.entity';
 import { Track } from './tracks/track.entity';
 import { Artist } from './artists/artist.entity';
 import { Tag } from './tags/tag.entity';
 import { SoundcloudInterfaceModule } from './soundcloud-interface/scinterface.module';
+import { ArtistModule } from './artists/artist.module';
+import { TrackModule } from './tracks/track.module';
 
 @Module({
   imports: [
@@ -31,8 +31,10 @@ import { SoundcloudInterfaceModule } from './soundcloud-interface/scinterface.mo
       inject: [ConfigService],
     }),
     SoundcloudInterfaceModule,
+    ArtistModule,
+    TrackModule,
   ],
-  controllers: [AppController, TrackController],
-  providers: [AppService, TrackService],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

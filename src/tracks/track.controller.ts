@@ -1,12 +1,22 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { TrackService } from './track.service';
+import { Track } from './track.entity';
 
 @Controller('tracks')
 export class TrackController {
   constructor(private readonly trackService: TrackService) {}
 
   @Get()
-  getTrack(): string {
-    return this.trackService.getTrack();
+  async getAllTracks(
+    @Query('limit') limit: number | undefined,
+    @Query('sort') sort: 'ASC' | 'DESC' | undefined,
+  ): Promise<Track[]> {
+    return await this.trackService.getAll(limit, sort);
+  }
+
+  @Get(':id')
+  async getTrackById(@Param() params: any): Promise<Track | string> {
+    const track = await this.trackService.getById(params.id);
+    return track ?? 'No track found';
   }
 }
