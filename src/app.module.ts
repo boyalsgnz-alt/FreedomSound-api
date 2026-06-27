@@ -12,6 +12,7 @@ import { Tag } from './tags/tag.entity';
 import { SoundcloudInterfaceModule } from './soundcloud-interface/scinterface.module';
 import { ArtistModule } from './artists/artist.module';
 import { TrackModule } from './tracks/track.module';
+import { TagModule } from './tags/tag.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { TrackModule } from './tracks/track.module';
     SoundcloudInterfaceModule,
     ArtistModule,
     TrackModule,
+    TagModule,
   ],
   controllers: [AppController],
   providers: [AppService],

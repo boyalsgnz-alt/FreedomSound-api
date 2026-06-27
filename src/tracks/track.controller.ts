@@ -1,4 +1,12 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+  Query,
+  Res,
+} from '@nestjs/common';
 import { TrackService } from './track.service';
 import { Track } from './track.entity';
 
@@ -17,6 +25,9 @@ export class TrackController {
   @Get(':id')
   async getTrackById(@Param() params: any): Promise<Track | string> {
     const track = await this.trackService.getById(params.id);
-    return track ?? 'No track found';
+    if (!track) {
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+    return track;
   }
 }

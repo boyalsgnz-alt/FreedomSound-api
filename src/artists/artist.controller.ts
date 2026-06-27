@@ -1,4 +1,11 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+  Query,
+} from '@nestjs/common';
 import { Artist } from './artist.entity';
 import { ArtistService } from './artist.service';
 
@@ -15,8 +22,11 @@ export class ArtistController {
   }
 
   @Get(':id')
-  async getArtistById(@Param() params: any): Promise<Artist | string> {
+  async getArtistById(@Param() params: any): Promise<Artist> {
     const artist = await this.artistService.getById(params.id);
-    return artist ? artist : 'No artist found';
+    if (!artist) {
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+    return artist;
   }
 }
