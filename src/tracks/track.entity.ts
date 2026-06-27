@@ -22,9 +22,6 @@ export class Track {
   @Column()
   title: string;
 
-  @Column({ default: '' })
-  hash?: string;
-
   @Column({ nullable: true })
   duration: number;
 
@@ -42,6 +39,6 @@ export class Track {
   @OneToMany(() => TrackSource, (source) => source.track)
   sources: TrackSource[];
 
-  @Column({ type: 'boolean', default: true })
-  user_vetted = false;
+  @Column({ type: 'boolean', default: false })
+  user_vetted: boolean;
 }

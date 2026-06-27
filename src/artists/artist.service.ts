@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Artist } from './artist.entity';
 import { ArtistDto } from './artist.dto';
+import { Tag } from '../tags/tag.entity';
 
 @Injectable()
 export class ArtistService {
@@ -20,7 +21,17 @@ export class ArtistService {
     return await this.artistRepo.find({
       take: limit,
       order: { name: sort ?? 'ASC' },
+      relations: { tracks: true },
     });
+  }
+
+  async getOrCreateArtist(artistDto: ArtistDto): Promise<Artist> {
+    let artist: Artist | null;
+    artist = await this.artistRepo.findOneBy({ name: artistDto.name });
+    if (!artist) {
+      artist = await this.artistRepo.save(artistDto);
+    }
+    return artist;
   }
 
   async getById(id: number): Promise<Artist | null> {

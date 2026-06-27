@@ -5,7 +5,6 @@ import {
   HttpStatus,
   Param,
   Query,
-  Res,
 } from '@nestjs/common';
 import { TrackService } from './track.service';
 import { Track } from './track.entity';
@@ -23,7 +22,7 @@ export class TrackController {
   }
 
   @Get(':id')
-  async getTrackById(@Param() params: any): Promise<Track | string> {
+  async getTrackById(@Param() params: { id: number }): Promise<Track | string> {
     const track = await this.trackService.getById(params.id);
     if (!track) {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);

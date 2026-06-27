@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { Track } from './track.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Tag } from '../tags/tag.entity';
 
 @Injectable()
 export class TrackService {
@@ -10,6 +9,7 @@ export class TrackService {
     @InjectRepository(Track)
     private trackRepo: Repository<Track>,
   ) {}
+
   async getById(id: number): Promise<Track | null> {
     return await this.trackRepo.findOneBy({ id: id });
   }
@@ -23,6 +23,11 @@ export class TrackService {
       order: {
         title: sort,
       },
+      relations: { artists: true, tags: true },
     });
+  }
+
+  async getByFileName(fileName: string): Promise<Track | null> {
+    return await this.trackRepo.findOneBy({ fileName });
   }
 }
