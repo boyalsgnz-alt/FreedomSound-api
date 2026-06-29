@@ -8,18 +8,18 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "portmapping:portmapping"
+      - "portmapping:portmapping" # <- to be replaced
 
   db:
     image: mysql:9.7
     restart: always
     environment:
-      MYSQL_USER: "YOUR_SQL_USER"
-      MYSQL_ROOT_PASSWORD: "YOUR_SQL_ROOT_PASSWORD"
-      MYSQL_PASSWORD: "YOUR_SQL_USER_PASSWORD"
-      MYSQL_DATABASE: "YOUR_SQL_DB_NAME"
+      MYSQL_USER: "YOUR_SQL_USER" # <- to be replaced
+      MYSQL_ROOT_PASSWORD: "YOUR_SQL_ROOT_PASSWORD" # <- to be replaced
+      MYSQL_PASSWORD: "YOUR_SQL_USER_PASSWORD" # <- to be replaced
+      MYSQL_DATABASE: "YOUR_SQL_DB_NAME" # <- to be replaced
     ports:
-      - "portmapping:portmapping"
+      - "portmapping:portmapping" # <- to be replaced
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
@@ -37,12 +37,12 @@ services:
     env_file:
       - .env
     ports:
-      - "portmapping:portmapping"
+      - "portmapping:portmapping" # <- to be replaced
     # API needs this to look up local files, make sure this is the same as in .env
     volumes:
       - type: bind
-        source: "/your/path/to/local/mp3s"
-        target: "/your/path/to/local/mp3s"
+        source: "/your/path/to/local/mp3s" # <- to be replaced
+        target: "/your/path/to/local/mp3s" # <- to be replaced
         read_only: true
 
 volumes:

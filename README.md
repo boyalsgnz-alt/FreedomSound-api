@@ -1,108 +1,53 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# FreedomSound API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+The API to supplement the [FreedomSound iOS App](https://github.com/boyalsgnz-alt/FreedomSound). Written in TypeScript with [NestJS](https://nestjs.com/) framework.
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+What it does for now:
+- Gets your likes from your favorite music streaming app (you'll have to implement & wire this part yourself) and put them in a MySQL database
+- Tries to sync your local files with the liked songs from the streaming platform, linking the local path to the track
+- Allows you to "tag" tracks, for example giving them more than 1 genre/subgenre, adding "moods"
+- Generate playlists on the fly as [.m3u files](https://en.wikipedia.org/wiki/M3U) based on your criteria
+
+More things will be added in the future!
+
+Of course, your local files **must** have been obtained via totally legal means.
 
 ## Project setup
 
-```bash
-$ npm install
+### Via Docker/Docker Compose
+
+The recommended way of running this project is via [Docker](https://www.docker.com/), more specifically via [Docker Compose](https://docs.docker.com/compose/).
+
+Rename the template `docker-compose 1.yml` file to `docker-compose.yml` and replace the fields marked with `# <- to be replaced`. Also rename the `.env-1` file to `.env` and fill in the blanks. Then:
+
+```shell
+docker compose up -d
+```
+It launches 3 containers:
+- a MySQL instance
+- an Adminer instance (optional)
+- the API itself
+
+This should work as-is. Of course, the modification/enhancement of this docker-compose is at your convenience.
+
+### API Only
+
+You can also run the API as a "standalone", which would be better if you plan to do modifications on the API. Of course, being a NestJS API, you'll still need [Node.js](https://nodejs.org/en) on the target machine.
+Then:
+
+```shell
+npm i
+npm run dev:start
 ```
 
-## Compile and run the project
+This also means you'll have to have your own MySQL instance running, whether on your local machine or as a Docker container. If you chose this method, I'll assume you know what you're doing and you can wire it all together yourself.
 
-```bash
-# development
-$ npm run start
+## Documentation
 
-# watch mode
-$ npm run start:dev
+I aim to have 2 forms of documentation:
+- *in-code*, for anything that isn't a **route**
+- an auto-generated, self-managed endpoints documentation (thanks NestJS!!)
 
-# production mode
-$ npm run start:prod
-```
-
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it
-runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more
-information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check
-out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment
-straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than
-managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time
-  using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our
-  official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework)
-  and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If
-you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+The endpoints documentation is directly accessible on the `{root_url}/api-docs` endpoint of the API itself.
