@@ -1,21 +1,49 @@
 services:
 
-  # This service is optional, I just like having an interface to see the db
+  # This service is optional, I just like having an interface to see the DB
   adminer:
     image: adminer
     restart: always
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
-      - "8080:8080"
+      - "portmapping:portmapping"
 
   db:
     image: mysql:9.7
     restart: always
     environment:
-      MYSQL_USER: your-db-username
-      MYSQL_PASSWORD: your-db-password
-      MYSQL_ROOT_PASSWORD: your-db-root-password
-      MYSQL_DATABASE: your-db-name
+      MYSQL_USER: "YOUR_SQL_USER"
+      MYSQL_ROOT_PASSWORD: "YOUR_SQL_ROOT_PASSWORD"
+      MYSQL_PASSWORD: "YOUR_SQL_USER_PASSWORD"
+      MYSQL_DATABASE: "YOUR_SQL_DB_NAME"
     ports:
       - "portmapping:portmapping"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-# Replace fields where necessary and rename this file docker-compose.yml
+  api:
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "portmapping:portmapping"
+    # API needs this to look up local files, make sure this is the same as in .env
+    volumes:
+      - type: bind
+        source: "/your/path/to/local/mp3s"
+        target: "/your/path/to/local/mp3s"
+        read_only: true
+
+volumes:
+  db_data:
