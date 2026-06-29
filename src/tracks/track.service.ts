@@ -11,7 +11,10 @@ export class TrackService {
   ) {}
 
   async getById(id: number): Promise<Track | null> {
-    return await this.trackRepo.findOneBy({ id: id });
+    return await this.trackRepo.findOne({
+      where: { id: id },
+      relations: { artists: true, tags: true },
+    });
   }
 
   async getAll(

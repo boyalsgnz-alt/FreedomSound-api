@@ -13,6 +13,7 @@ import { TrackModule } from './tracks/track.module';
 import { TagModule } from './tags/tag.module';
 import { LocalFilesInterfaceModule } from './localfiles-interface/lfinterface.module';
 import { TrackSourceModule } from './tracksources/tracksource.module';
+import { PlaylistModule } from './playlist/playlist.module';
 
 @Module({
   imports: [
@@ -21,8 +22,8 @@ import { TrackSourceModule } from './tracksources/tracksource.module';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         type: 'mysql',
-        host: 'localhost',
-        port: 3306,
+        host: configService.getOrThrow<string>('MYSQL_HOST'),
+        port: Number(configService.getOrThrow<string>('MYSQL_PORT')),
         username: configService.getOrThrow<string>('MYSQL_USER'),
         password: configService.getOrThrow<string>('MYSQL_PASSWORD'),
         database: configService.getOrThrow<string>('MYSQL_ROOT_DBNAME'),
@@ -37,6 +38,7 @@ import { TrackSourceModule } from './tracksources/tracksource.module';
     TagModule,
     LocalFilesInterfaceModule,
     TrackSourceModule,
+    PlaylistModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -87,7 +87,7 @@ export class ArtistController {
   }
 
   /**
-   * Patches a Artist by its ID.
+   * Patches an Artist by its ID.
    *
    * @param params - The ID of the Artist to be patched
    * @param artistDto - The DTO containing the fields/values to be patched

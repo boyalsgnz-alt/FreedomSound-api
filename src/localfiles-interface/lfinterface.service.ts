@@ -51,6 +51,8 @@ export class LocalFilesInterfaceService {
   async addLocalFiles(
     files: { id: string; fileName: string }[],
   ): Promise<void> {
+    const folderPath =
+      this.configService.getOrThrow<string>('LOCAL_FILES_FOLDER');
     for (const file of files) {
       const trackEntity = await this.trackService.getByFileName(file.fileName);
       if (trackEntity) {
@@ -58,9 +60,11 @@ export class LocalFilesInterfaceService {
       }
       const trackSource = await this.trackSourceService.getByScId(file.id);
       if (!trackSource) {
-        const tags = NodeID3.read(file.fileName);
+        const tags = NodeID3.read(`${folderPath}/${file.fileName}`);
         const { title, artist, genre } = tags;
-        const duration = await this.getMp3Duration(file.fileName);
+        const duration = await this.getMp3Duration(
+          `${folderPath}/${file.fileName}`,
+        );
 
         const tagName = genre || '';
         const tagEntity = await this.tagService.getOrCreateTag({
@@ -111,15 +115,12 @@ export class LocalFilesInterfaceService {
   loadAllFiles(): string[] {
     const folderPath =
       this.configService.getOrThrow<string>('LOCAL_FILES_FOLDER');
-    const files = fs
-      .readdirSync(folderPath)
-      .map((fileName) => {
-        if (fileName.endsWith('.mp3')) {
-          return path.join(folderPath, fileName);
-        }
-        return '/Users';
-      })
-      .filter((file) => fs.lstatSync(file).isFile());
+    const files = fs.readdirSync(folderPath).map((fileName) => {
+      if (fileName.endsWith('.mp3')) {
+        return fileName;
+      }
+      return '';
+    });
     return files;
   }
 }
