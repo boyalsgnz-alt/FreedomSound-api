@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import fs from 'node:fs';
-import path from 'node:path';
 import { execFile } from 'child_process';
 import { TrackService } from '../tracks/track.service';
 import NodeID3 from 'node-id3';
@@ -69,9 +68,12 @@ export class LocalFilesInterfaceService {
         const tagName = genre || '';
         const tagEntity = await this.tagService.getOrCreateTag({
           name: tagName,
+          user_vetted: false,
         });
+        const artistName = artist || '';
         const artistEntity = await this.artistService.getOrCreateArtist({
-          name: artist,
+          name: artistName,
+          user_vetted: false,
         });
         let track = this.trackRepo.create({
           title,

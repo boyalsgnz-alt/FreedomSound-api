@@ -1,13 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Tag } from './tag.entity';
+import { CreateTagDto, UpdateTagDto } from './tag.dto';
+import { Track } from '../tracks/track.entity';
 
 @Injectable()
 export class TagService {
   constructor(
     @InjectRepository(Tag)
     private tagRepo: Repository<Tag>,
+    @InjectRepository(Track)
+    private trackRepo: Repository<Track>,
   ) {}
 
   async getAllTags(
@@ -26,7 +30,7 @@ export class TagService {
     return await this.tagRepo.findOneBy({ id: id });
   }
 
-  async getOrCreateTag(tagDto: Partial<Tag>): Promise<Tag> {
+  async getOrCreateTag(tagDto: CreateTagDto): Promise<Tag> {
     let tag: Tag | null;
     tag = await this.tagRepo.findOneBy({ name: tagDto.name });
     if (!tag) {
@@ -49,12 +53,20 @@ export class TagService {
     return false;
   }
 
-  async updateTag(id: number, tagDto: Partial<Tag>): Promise<Tag | null> {
-    let tag = await this.tagRepo.findOneBy({ id: id });
-    if (tag) {
-      tag = { ...tag, ...tagDto };
-      await this.tagRepo.save(tag);
+  async updateTag(id: number, tagDto: UpdateTagDto): Promise<Tag | null> {
+    const tag = await this.tagRepo.findOneBy({ id });
+
+    if (!tag) {
+      return null;
     }
-    return tag;
+
+    const { trackIds, ...rest } = tagDto;
+    Object.assign(tag, rest);
+
+    if (trackIds !== undefined) {
+      tag.tracks = await this.trackRepo.findBy({ id: In(trackIds) });
+    }
+
+    return this.tagRepo.save(tag);
   }
 }

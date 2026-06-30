@@ -1,7 +1,14 @@
-import { Track } from '../tracks/track.entity';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 
-export interface TagDto {
-  name?: string;
-  tracks?: Track[];
-  user_vetted?: boolean;
+export class CreateTagDto {
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty({ default: false })
+  user_vetted: boolean;
+}
+
+export class UpdateTagDto extends PartialType(CreateTagDto) {
+  @ApiProperty({ type: () => [Number], required: false })
+  trackIds: number[];
 }

@@ -7,12 +7,14 @@ import {
   HttpStatus,
   Param,
   Patch,
+  Post,
   Query,
 } from '@nestjs/common';
 import { Artist } from './artist.entity';
 import { ArtistService } from './artist.service';
 import { StringToNumberarrayPipePipe } from '../common/string-to-numberarray.pipe';
-import type { ArtistDto } from './artist.dto';
+import { CreateArtistDto, UpdateArtistDto } from './artist.dto';
+import { ApiParam } from '@nestjs/swagger';
 
 @Controller('artists')
 export class ArtistController {
@@ -23,22 +25,30 @@ export class ArtistController {
    *
    * @param limit - The limit to be returned
    * @param sort - Whether it should be sorted or first hits
+   * @param search - Will search for any artist whose name has {search} in it
    * @returns The Artist[] found, empty array if none
    */
   @Get()
   async getAllArtists(
     @Query('limit') limit: number | undefined,
     @Query('sort') sort: 'ASC' | 'DESC' | undefined,
+    @Query('search') search: string | undefined,
   ): Promise<Artist[]> {
-    return await this.artistService.getAllArtists(limit, sort);
+    return await this.artistService.getAllArtists(limit, sort, search);
   }
 
   /**
    * Gets an Artist by its ID from the DB.
    *
    * @param params - Parameter in the request path, here, /:id
-   * @returns the found Artist or throws NOT_FOUND if not found.
+   * @returns the found Artist or throws NOT_FOUND if not found
    */
+  @ApiParam({
+    type: 'string',
+    name: 'id',
+    required: true,
+    description: 'ID of the Artist',
+  })
   @Get(':id')
   async getArtistById(@Param() params: { id: number }): Promise<Artist> {
     const artist = await this.artistService.getById(params.id);
@@ -46,6 +56,18 @@ export class ArtistController {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
     return artist;
+  }
+
+  /**
+   * Creates an Artist of returns the existing Artist, if any
+   *
+   * @param artistDto - The Artist to be created
+   *
+   * @returns the found Artist or throws NOT_FOUND if not found.
+   */
+  @Post()
+  async createArtist(@Body() artistDto: CreateArtistDto): Promise<Artist> {
+    return await this.artistService.getOrCreateArtist(artistDto);
   }
 
   /**
@@ -96,7 +118,7 @@ export class ArtistController {
   @Patch(':id')
   async updateArtistById(
     @Param() params: { id: number },
-    @Body() artistDto: ArtistDto,
+    @Body() artistDto: UpdateArtistDto,
   ): Promise<object> {
     const artist = await this.artistService.patchArtistById(
       params.id,

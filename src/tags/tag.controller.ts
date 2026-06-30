@@ -13,7 +13,8 @@ import {
 import { TagService } from './tag.service';
 import { Tag } from './tag.entity';
 import { StringToNumberarrayPipePipe } from '../common/string-to-numberarray.pipe';
-import type { TagDto } from './tag.dto';
+import { CreateTagDto, UpdateTagDto } from './tag.dto';
+import { ApiBody } from '@nestjs/swagger';
 
 @Controller('tags')
 export class TagController {
@@ -57,7 +58,7 @@ export class TagController {
    * @returns The Tag created/retrieved
    */
   @Post()
-  async createTag(@Body() body: Partial<Tag>): Promise<Tag> {
+  async createTag(@Body() body: CreateTagDto): Promise<Tag> {
     return await this.tagService.getOrCreateTag(body);
   }
 
@@ -106,10 +107,11 @@ export class TagController {
    * @param tagDto - The DTO containing the fields/values to be patched
    * @returns the newly modified Tag if it has been found & modified, throws NOT_FOUND otherwise
    */
+  @ApiBody({ type: UpdateTagDto })
   @Patch(':id')
   async patchTagById(
     @Param() params: { id: number },
-    @Body() tagDto: TagDto,
+    @Body() tagDto: UpdateTagDto,
   ): Promise<Tag> {
     const tag = await this.tagService.updateTag(params.id, tagDto);
     if (!tag) {
