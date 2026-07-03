@@ -20,12 +20,13 @@ export class ArtistService {
     limit: number | undefined,
     sort: 'ASC' | 'DESC' | undefined,
     search: string | undefined,
+    user_vetted: boolean | undefined,
   ): Promise<Artist[]> {
     return await this.artistRepo.find({
+      where: { user_vetted, ...(search ? { name: ILike(`%${search}%`) } : {}) },
       take: limit,
       order: { name: sort ?? 'ASC' },
       relations: { tracks: true },
-      where: search ? { name: ILike(`%${search}%`) } : {},
     });
   }
 

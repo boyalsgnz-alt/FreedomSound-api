@@ -12,6 +12,6 @@ export class Artist {
   @ManyToMany(() => Track, (track) => track.artists)
   tracks: Track[];
 
-  @Column({ type: 'boolean', default: true })
-  user_vetted = false;
+  @Column({ type: 'boolean', default: false })
+  user_vetted;
 }

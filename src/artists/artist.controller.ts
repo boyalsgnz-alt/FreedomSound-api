@@ -25,6 +25,7 @@ export class ArtistController {
    *
    * @param limit - The limit to be returned
    * @param sort - Whether it should be sorted or first hits
+   * @param user_vetted - a boolean to search if the user has verified the Artist
    * @param search - Will search for any artist whose name has {search} in it
    * @returns The Artist[] found, empty array if none
    */
@@ -32,9 +33,19 @@ export class ArtistController {
   async getAllArtists(
     @Query('limit') limit: number | undefined,
     @Query('sort') sort: 'ASC' | 'DESC' | undefined,
+    @Query('user_vetted') user_vetted: string | undefined,
     @Query('search') search: string | undefined,
   ): Promise<Artist[]> {
-    return await this.artistService.getAllArtists(limit, sort, search);
+    let userVettedBool = false;
+    if (user_vetted && user_vetted === 'true') {
+      userVettedBool = true;
+    }
+    return await this.artistService.getAllArtists(
+      limit,
+      sort,
+      search,
+      userVettedBool,
+    );
   }
 
   /**
