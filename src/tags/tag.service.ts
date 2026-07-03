@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { ILike, In, Repository } from 'typeorm';
 import { Tag } from './tag.entity';
 import { CreateTagDto, UpdateTagDto } from './tag.dto';
 import { Track } from '../tracks/track.entity';
@@ -17,11 +17,22 @@ export class TagService {
   async getAllTags(
     limit: number | undefined,
     sort: 'ASC' | 'DESC' | undefined,
+    search: string | undefined,
+    user_vetted: boolean | undefined,
   ): Promise<Tag[]> {
     return await this.tagRepo.find({
+      where: {
+        user_vetted,
+        ...(search ? { name: ILike(`%${search}%`) } : {}),
+      },
       take: limit,
       order: {
         name: sort,
+      },
+      relations: {
+        tracks: {
+          artists: true,
+        },
       },
     });
   }

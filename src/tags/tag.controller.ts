@@ -40,14 +40,27 @@ export class TagController {
    *
    * @param limit - The limit to be returned
    * @param sort - Whether it should be sorted or first hits
+   * @param user_vetted - a boolean to search if the user has verified the Tag
+   * @param search - To filter by this search
    * @returns The Tag[] found, empty array if none
    */
   @Get()
   async getAllTags(
     @Query('limit') limit: number | undefined,
     @Query('sort') sort: 'ASC' | 'DESC' | undefined,
+    @Query('user_vetted') user_vetted: string | undefined,
+    @Query('search') search: string | undefined,
   ): Promise<Tag[]> {
-    return await this.tagService.getAllTags(limit, sort);
+    let userVettedBool = false;
+    if (user_vetted && user_vetted === 'true') {
+      userVettedBool = true;
+    }
+    return await this.tagService.getAllTags(
+      limit,
+      sort,
+      search,
+      userVettedBool,
+    );
   }
 
   /**
