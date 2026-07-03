@@ -76,4 +76,53 @@ export class ArtistService {
 
     return this.artistRepo.save(artist);
   }
+
+  async decoupleArtists(id: number): Promise<boolean> {
+    const artist = await this.artistRepo.findOne({
+      where: { id },
+      relations: { tracks: true },
+    });
+    const regex = new RegExp(/\s*(?:\bx\b|&|\bfeat\.?|\bft\.?|\bvs\.?|,)\s*/i);
+
+    if (!artist) {
+      return false;
+    }
+    // retrieving tracks linked to the current artist
+    const tracks: Track[] = [];
+    if (artist.tracks.length > 0) {
+      for (const track of artist.tracks) {
+        const trackEntity = await this.trackRepo.findOne({
+          where: { id: track.id },
+          relations: { artists: true },
+        });
+        if (trackEntity) {
+          tracks.push(trackEntity);
+        }
+      }
+    }
+    // split the current artist, getting/creating them
+    const artistsSplit = artist.name.split(regex);
+    const newArtists: Artist[] = [];
+    for (const artistName of artistsSplit) {
+      const artEntity = await this.getOrCreateArtist({
+        name: artistName,
+        user_vetted: false,
+      });
+      newArtists.push(artEntity);
+    }
+
+    // for each track we de-link the current artist and we re-link the created ones
+    for (const track of tracks) {
+      track.artists = track.artists.filter((it) => it.id !== artist.id);
+      for (const artist of newArtists) {
+        track.artists.push(artist);
+      }
+      await this.trackRepo.save(track);
+    }
+
+    // finally, we cleanup the linking table and we delete the current artist
+    artist.tracks = [];
+    await this.artistRepo.delete(artist);
+    return true;
+  }
 }

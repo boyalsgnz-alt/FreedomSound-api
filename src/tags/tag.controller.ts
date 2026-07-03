@@ -132,4 +132,16 @@ export class TagController {
     }
     return tag;
   }
+
+  @Post(':id/decouple')
+  async decoupleTag(@Param() params: { id: number }): Promise<boolean> {
+    const tagDecoupled = await this.tagService.decoupleTag(params.id);
+    if (!tagDecoupled) {
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+    return tagDecoupled;
+  }
 }

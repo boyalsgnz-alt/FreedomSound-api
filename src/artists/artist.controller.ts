@@ -140,4 +140,22 @@ export class ArtistController {
     }
     return artist;
   }
+
+  /**
+   * Decouples an entry that seems to be multiple artists. Creates all of them separately or retrieves them otherwise
+   * This action destroys the artist entity passed as ID.
+   * @param params - The Artist entity ID to be decoupled
+   * @returns a boolean indicating if the entity has been decoupled properly. Throws 500 if not
+   */
+  @Post(':id/decouple')
+  async decoupleArtists(@Param() params: { id: number }): Promise<boolean> {
+    const artistDecoupled = await this.artistService.decoupleArtists(params.id);
+    if (!artistDecoupled) {
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+    return artistDecoupled;
+  }
 }
