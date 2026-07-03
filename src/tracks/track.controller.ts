@@ -17,8 +17,14 @@ export class TrackController {
   async getAllTracks(
     @Query('limit') limit: number | undefined,
     @Query('sort') sort: 'ASC' | 'DESC' | undefined,
+    @Query('user_vetted') user_vetted: string | undefined,
+    @Query('search') search: string | undefined,
   ): Promise<Track[]> {
-    return await this.trackService.getAll(limit, sort);
+    let userVettedBool = false;
+    if (user_vetted && user_vetted === 'true') {
+      userVettedBool = true;
+    }
+    return await this.trackService.getAll(limit, sort, userVettedBool, search);
   }
 
   @Get(':id')

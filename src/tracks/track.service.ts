@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Track } from './track.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 
 @Injectable()
 export class TrackService {
@@ -20,8 +20,14 @@ export class TrackService {
   async getAll(
     limit: number | undefined,
     sort: 'ASC' | 'DESC' | undefined,
+    user_vetted: boolean | undefined,
+    search: string | undefined,
   ): Promise<Track[]> {
     return await this.trackRepo.find({
+      where: {
+        user_vetted: user_vetted,
+        ...(search && { title: ILike(`%${search}%`) }),
+      },
       take: limit,
       order: {
         title: sort,
