@@ -82,7 +82,9 @@ export class ArtistService {
       where: { id },
       relations: { tracks: true },
     });
-    const regex = new RegExp(/\s*(?:\bx\b|&|\bfeat\.?|\bft\.?|\bvs\.?|,)\s*/i);
+    const regex = new RegExp(
+      /\s*(?:\bx\b|&|\bfeat\.?|\bft\.?|\bvs\.?|,|\band\b)\s*/i,
+    );
 
     if (!artist) {
       return false;
@@ -120,7 +122,7 @@ export class ArtistService {
       await this.trackRepo.save(track);
     }
 
-    // finally, we cleanup the linking table and we delete the current artist
+    // finally, we clean up the linking table and we delete the current artist
     artist.tracks = [];
     await this.artistRepo.delete(artist);
     return true;

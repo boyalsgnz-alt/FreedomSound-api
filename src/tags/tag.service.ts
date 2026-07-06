@@ -80,37 +80,4 @@ export class TagService {
 
     return this.tagRepo.save(tag);
   }
-
-  async decoupleTag(id: number): Promise<boolean> {
-    const tag = await this.tagRepo.findOne({
-      where: { id: id },
-    });
-
-    if (!tag) {
-      return false;
-    }
-
-    // retrieve tracks linked to this tag
-    const tracks: Track[] = [];
-    for (const track of tag.tracks) {
-      const trackEntity = await this.trackRepo.findOne({
-        where: { id: track.id },
-        relations: { tags: true },
-      });
-      if (trackEntity) {
-        tracks.push(trackEntity);
-      }
-    }
-
-    // unlink all tracks associated to this tag
-    for (const track of tracks) {
-      track.tags = track.tags.filter((it) => it.id !== tag.id);
-      await this.trackRepo.save(track);
-    }
-
-    // cleanup linking table + deleting tag
-    tag.tracks = [];
-    await this.tagRepo.delete(tag);
-    return true;
-  }
 }
