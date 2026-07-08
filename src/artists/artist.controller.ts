@@ -158,4 +158,9 @@ export class ArtistController {
     }
     return artistDecoupled;
   }
+
+  @Get('synchronize')
+  async synchronizeArtists(): Promise<boolean> {
+    return await this.artistService.synchronizeArtists();
+  }
 }

@@ -5,6 +5,7 @@ import { ILike, In, Repository } from 'typeorm';
 import { Artist } from './artist.entity';
 import { CreateArtistDto, UpdateArtistDto } from './artist.dto';
 import { Track } from '../tracks/track.entity';
+import NodeID3 from 'node-id3';
 
 @Injectable()
 export class ArtistService {
@@ -44,6 +45,7 @@ export class ArtistService {
   }
 
   async deleteArtistById(id: number): Promise<boolean> {
+    console.log(id);
     const artist = await this.artistRepo.findOne({
       where: { id },
       relations: { tracks: true },
@@ -52,6 +54,7 @@ export class ArtistService {
       artist.tracks = [];
       await this.artistRepo.save(artist);
       await this.artistRepo.delete(artist);
+      console.log('Artist deleted');
       return true;
     }
     return false;
@@ -83,7 +86,7 @@ export class ArtistService {
       relations: { tracks: true },
     });
     const regex = new RegExp(
-      /\s*(?:\bx\b|&|\bfeat\.?|\bft\.?|\bvs\.?|,|\band\b)\s*/i,
+      /\s*(?:\bx\b|&|\bfeaturing\b|\bfeat\.|\bfeat\b|\bft\.|\bft\b|,)\s*/i,
     );
 
     if (!artist) {
@@ -124,7 +127,35 @@ export class ArtistService {
 
     // finally, we clean up the linking table and we delete the current artist
     artist.tracks = [];
+    await this.artistRepo.save(artist);
     await this.artistRepo.delete(artist);
+    return true;
+  }
+
+  /**
+   * This function synchronizes the artists written in the DB with the actual ID3 metadata
+   * of songs.
+   * Since the DB is the source of truth, we modify the artists on the UI but we have to sync
+   * since the iOS app reads the metadata of the file to determine the artists.
+   */
+
+  // TODO: This is very heavy, use promises version of ID3 and return immediately
+  // TODO: Update the client via Sockets ?
+  async synchronizeArtists(): Promise<boolean> {
+    const tracks = await this.trackRepo.find({ relations: { artists: true } });
+    for (const track of tracks) {
+      if (!track.fileName) {
+        continue;
+      }
+      const folderPath =
+        this.configService.getOrThrow<string>('LOCAL_FILES_FOLDER');
+      let tags = NodeID3.read(`${folderPath}/${track.fileName}`);
+      const artistsReduced = track.artists.reduce((initial, acc) => {
+        return `${initial}, ${acc.name}`;
+      }, '');
+      tags = { ...tags, artist: artistsReduced };
+      NodeID3.update(tags, `${folderPath}/${track.fileName}`);
+    }
     return true;
   }
 }
