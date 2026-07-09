@@ -112,6 +112,7 @@ export class ArtistService {
       const artEntity = await this.getOrCreateArtist({
         name: artistName,
         user_vetted: false,
+        tracks: [],
       });
       newArtists.push(artEntity);
     }

@@ -1,5 +1,11 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsArray, IsBoolean, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { Track } from '../tracks/track.entity';
 import { Expose, Type } from 'class-transformer';
 import { ResponseTrackDto } from '../tracks/track.dto';
@@ -20,7 +26,22 @@ export class CreateArtistDto {
   tracks: Track[];
 }
 
-export class UpdateArtistDto extends PartialType(CreateArtistDto) {}
+export class UpdateArtistDto {
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  name: string;
+
+  @ApiProperty({ default: false })
+  @IsOptional()
+  @IsBoolean()
+  user_vetted: false;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsArray()
+  trackIds: number[];
+}
 
 export class ResponseArtistDto {
   @Expose()
