@@ -1,13 +1,16 @@
 import {
+  Body,
   Controller,
   Get,
   HttpException,
   HttpStatus,
   Param,
+  Patch,
   Query,
 } from '@nestjs/common';
 import { TrackService } from './track.service';
 import { Track } from './track.entity';
+import { UpdateTrackDto } from './track.dto';
 
 @Controller('tracks')
 export class TrackController {
@@ -34,5 +37,17 @@ export class TrackController {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
     return track;
+  }
+
+  @Patch(':id')
+  async patchTrackById(
+    @Param() params: { id: number },
+    @Body() body: UpdateTrackDto,
+  ): Promise<boolean> {
+    const check = await this.trackService.updateTrack(params.id, body);
+    if (!check) {
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+    return true;
   }
 }

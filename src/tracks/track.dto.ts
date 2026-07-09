@@ -29,4 +29,19 @@ export class CreateTrackDto {
   user_vetted: boolean;
 }
 
-export class UpdateTrackDto extends PartialType(CreateTrackDto) {}
+export class UpdateTrackDto {
+  @ApiProperty()
+  fileName?: string;
+
+  @ApiProperty()
+  title?: string;
+
+  @ApiProperty()
+  artists?: Artist[];
+
+  @ApiProperty()
+  tags?: Tag[];
+
+  @ApiProperty()
+  user_vetted: boolean;
+}
