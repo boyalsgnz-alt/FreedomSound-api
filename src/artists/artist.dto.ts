@@ -1,10 +1,10 @@
-import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
   IsBoolean,
+  IsInt,
   IsOptional,
   IsString,
-  ValidateNested,
 } from 'class-validator';
 import { Track } from '../tracks/track.entity';
 import { Expose, Type } from 'class-transformer';
@@ -19,11 +19,11 @@ export class CreateArtistDto {
   @IsBoolean()
   user_vetted: false;
 
-  @ApiProperty({ type: [Track], required: true })
+  @ApiProperty({ type: [Number], required: false })
+  @IsOptional()
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => Track)
-  tracks: Track[];
+  @IsInt({ each: true })
+  tracks?: number[];
 }
 
 export class UpdateArtistDto {
@@ -37,10 +37,11 @@ export class UpdateArtistDto {
   @IsBoolean()
   user_vetted: false;
 
-  @ApiProperty()
+  @ApiProperty({ type: [Number], required: false })
   @IsOptional()
   @IsArray()
-  trackIds: number[];
+  @IsInt({ each: true })
+  tracks?: number[];
 }
 
 export class ResponseArtistDto {

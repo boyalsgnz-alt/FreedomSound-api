@@ -5,6 +5,7 @@ import { TrackSource } from '../tracksources/tracksource.entity';
 import {
   IsArray,
   IsBoolean,
+  IsInt,
   IsOptional,
   IsString,
   ValidateNested,
@@ -23,17 +24,17 @@ export class CreateTrackDto {
   @IsString()
   title: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: [Number], required: false })
+  @IsOptional()
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => Artist)
-  artists: Artist[];
+  @IsInt({ each: true })
+  artists?: number[];
 
-  @ApiProperty()
+  @ApiProperty({ type: [Number], required: false })
+  @IsOptional()
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => Tag)
-  tags: Tag[];
+  @IsInt({ each: true })
+  tags?: number[];
 
   @ApiProperty()
   sources: TrackSource[];
@@ -54,24 +55,22 @@ export class UpdateTrackDto {
   @IsString()
   title?: string;
 
-  @ApiProperty({ type: [Artist], required: false })
+  @ApiProperty({ type: [Number], required: false })
   @IsOptional()
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => Artist)
-  artists?: Artist[];
+  @IsInt({ each: true })
+  artists?: number[];
 
-  @ApiProperty({ type: [Tag], required: false })
+  @ApiProperty({ type: [Number], required: false })
   @IsOptional()
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => Tag)
-  tags?: Tag[];
+  @IsInt({ each: true })
+  tags?: number[];
 
   @ApiProperty()
   @IsOptional()
   @IsBoolean()
-  user_vetted: boolean;
+  user_vetted?: boolean;
 }
 
 export class ResponseTrackDto {

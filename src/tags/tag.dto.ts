@@ -1,7 +1,8 @@
-import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
   IsBoolean,
+  IsInt,
   IsOptional,
   IsString,
   ValidateNested,
@@ -19,11 +20,11 @@ export class CreateTagDto {
   @IsBoolean()
   user_vetted: boolean;
 
-  @ApiProperty({ type: [Track], required: true })
+  @ApiProperty({ type: [Number], required: false })
+  @IsOptional()
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => Track)
-  tracks: Track[];
+  @IsInt({ each: true })
+  tracks?: number[];
 }
 
 export class UpdateTagDto {
@@ -37,10 +38,11 @@ export class UpdateTagDto {
   @IsBoolean()
   user_vetted: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: [Number], required: false })
   @IsOptional()
   @IsArray()
-  trackIds: number[];
+  @IsInt({ each: true })
+  tracks?: number[];
 }
 
 export class ResponseTagDto {
