@@ -5,7 +5,6 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  ValidateNested,
 } from 'class-validator';
 import { Expose, Type } from 'class-transformer';
 import { Track } from '../tracks/track.entity';

@@ -31,11 +31,15 @@ export class ArtistService {
     });
   }
 
-  async getOrCreateArtist(artistObject: CreateArtistDto): Promise<Artist> {
+  async getOrCreateArtist(artistDto: CreateArtistDto): Promise<Artist> {
     let artist: Artist | null;
-    artist = await this.artistRepo.findOneBy({ name: artistObject.name });
+    artist = await this.artistRepo.findOneBy({ name: artistDto.name });
     if (!artist) {
-      artist = await this.artistRepo.save(artistObject);
+      artist = await this.artistRepo.save({
+        name: artistDto.name,
+        user_vetted: artistDto.user_vetted,
+        tracks: [],
+      });
     }
     return artist;
   }
@@ -70,11 +74,11 @@ export class ArtistService {
       return null;
     }
 
-    const { trackIds, ...rest } = artistDto;
+    const { tracks, ...rest } = artistDto;
     Object.assign(artist, rest);
 
-    if (trackIds !== undefined) {
-      artist.tracks = await this.trackRepo.findBy({ id: In(trackIds) });
+    if (tracks !== undefined) {
+      artist.tracks = await this.trackRepo.findBy({ id: In(tracks) });
     }
 
     return this.artistRepo.save(artist);

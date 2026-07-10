@@ -45,7 +45,11 @@ export class TagService {
     let tag: Tag | null;
     tag = await this.tagRepo.findOneBy({ name: tagDto.name });
     if (!tag) {
-      tag = await this.tagRepo.save(tagDto);
+      tag = await this.tagRepo.save({
+        name: tagDto.name,
+        user_vetted: tagDto.user_vetted,
+        tracks: [],
+      });
     }
     return tag;
   }
@@ -71,11 +75,11 @@ export class TagService {
       return null;
     }
 
-    const { trackIds, ...rest } = tagDto;
+    const { tracks, ...rest } = tagDto;
     Object.assign(tag, rest);
 
-    if (trackIds !== undefined) {
-      tag.tracks = await this.trackRepo.findBy({ id: In(trackIds) });
+    if (tracks !== undefined) {
+      tag.tracks = await this.trackRepo.findBy({ id: In(tracks) });
     }
 
     return this.tagRepo.save(tag);

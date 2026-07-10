@@ -57,11 +57,10 @@ export class TrackService {
     if (dto.artists === undefined || dto.artists.length === 0) {
       entity.artists = [];
     } else {
-      const ids = dto.artists.map((artist) => artist.id);
       const artistEntities = await this.artistRepo.find({
-        where: { id: In(ids) },
+        where: { id: In(dto.artists) },
       });
-      if (artistEntities.length !== ids.length) {
+      if (artistEntities.length !== dto.artists.length) {
         return false;
       }
       entity.artists = artistEntities;
@@ -69,16 +68,15 @@ export class TrackService {
     if (dto.tags === undefined || dto.tags.length === 0) {
       entity.tags = [];
     } else {
-      const ids = dto.tags.map((tag) => tag.id);
       const tagEntities = await this.tagRepo.find({
-        where: { id: In(ids) },
+        where: { id: In(dto.tags) },
       });
-      if (tagEntities.length !== ids.length) {
+      if (tagEntities.length !== dto.tags.length) {
         return false;
       }
       entity.tags = tagEntities;
     }
-
+    console.log(entity);
     return true;
   }
   async updateTrack(id: number, dto: UpdateTrackDto): Promise<boolean> {
