@@ -69,11 +69,13 @@ export class LocalFilesInterfaceService {
         const tagEntity = await this.tagService.getOrCreateTag({
           name: tagName,
           user_vetted: false,
+          tracks: [],
         });
         const artistName = artist || '';
         const artistEntity = await this.artistService.getOrCreateArtist({
           name: artistName,
           user_vetted: false,
+          tracks: [],
         });
         let track = this.trackRepo.create({
           title,

@@ -31,11 +31,15 @@ export class ArtistService {
     });
   }
 
-  async getOrCreateArtist(artistObject: CreateArtistDto): Promise<Artist> {
+  async getOrCreateArtist(artistDto: CreateArtistDto): Promise<Artist> {
     let artist: Artist | null;
-    artist = await this.artistRepo.findOneBy({ name: artistObject.name });
+    artist = await this.artistRepo.findOneBy({ name: artistDto.name });
     if (!artist) {
-      artist = await this.artistRepo.save(artistObject);
+      artist = await this.artistRepo.save({
+        name: artistDto.name,
+        user_vetted: artistDto.user_vetted,
+        tracks: [],
+      });
     }
     return artist;
   }
@@ -45,7 +49,6 @@ export class ArtistService {
   }
 
   async deleteArtistById(id: number): Promise<boolean> {
-    console.log(id);
     const artist = await this.artistRepo.findOne({
       where: { id },
       relations: { tracks: true },
@@ -54,7 +57,6 @@ export class ArtistService {
       artist.tracks = [];
       await this.artistRepo.save(artist);
       await this.artistRepo.delete(artist);
-      console.log('Artist deleted');
       return true;
     }
     return false;
@@ -64,20 +66,22 @@ export class ArtistService {
     id: number,
     artistDto: UpdateArtistDto,
   ): Promise<Artist | null> {
-    const artist = await this.artistRepo.findOneBy({ id });
+    let artist = await this.artistRepo.findOneBy({ id });
 
     if (!artist) {
       return null;
     }
 
-    const { trackIds, ...rest } = artistDto;
+    const { tracks, ...rest } = artistDto;
     Object.assign(artist, rest);
 
-    if (trackIds !== undefined) {
-      artist.tracks = await this.trackRepo.findBy({ id: In(trackIds) });
+    if (tracks !== undefined) {
+      artist.tracks = await this.trackRepo.findBy({ id: In(tracks) });
     }
 
-    return this.artistRepo.save(artist);
+    artist = await this.artistRepo.save(artist);
+
+    return artist;
   }
 
   async decoupleArtists(id: number): Promise<boolean> {
@@ -85,13 +89,14 @@ export class ArtistService {
       where: { id },
       relations: { tracks: true },
     });
-    const regex = new RegExp(
-      /\s*(?:\bx\b|&|\bfeaturing\b|\bfeat\.|\bfeat\b|\bft\.|\bft\b|,)\s*/i,
-    );
 
     if (!artist) {
       return false;
     }
+
+    const regex = new RegExp(
+      /\s*(?:\bx\b|&|\bfeaturing\b|\bfeat\.|\bfeat\b|\bft\.|\bft\b|,)\s*/i,
+    );
     // retrieving tracks linked to the current artist
     const tracks: Track[] = [];
     if (artist.tracks.length > 0) {
@@ -112,6 +117,7 @@ export class ArtistService {
       const artEntity = await this.getOrCreateArtist({
         name: artistName,
         user_vetted: false,
+        tracks: [],
       });
       newArtists.push(artEntity);
     }
@@ -137,10 +143,14 @@ export class ArtistService {
    * of songs.
    * Since the DB is the source of truth, we modify the artists on the UI but we have to sync
    * since the iOS app reads the metadata of the file to determine the artists.
+   *
+   * The downside of this is we have to re-sync all the songs to the device manually, also taking time
    */
 
   // TODO: This is very heavy, use promises version of ID3 and return immediately
   // TODO: Update the client via Sockets ?
+  // TODO: Add a mechanism to know if this has been synchronized, to reduce read/write ops and thus time
+
   async synchronizeArtists(): Promise<boolean> {
     const tracks = await this.trackRepo.find({ relations: { artists: true } });
     for (const track of tracks) {

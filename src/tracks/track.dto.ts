@@ -1,47 +1,103 @@
-import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { Tag } from '../tags/tag.entity';
 import { Artist } from '../artists/artist.entity';
 import { TrackSource } from '../tracksources/tracksource.entity';
+import {
+  IsArray,
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
+import { Expose, Type } from 'class-transformer';
+import { ResponseArtistDto } from '../artists/artist.dto';
+import { ResponseTagDto } from '../tags/tag.dto';
 
 export class CreateTrackDto {
   @ApiProperty()
+  @IsOptional()
+  @IsString()
   fileName?: string;
 
   @ApiProperty()
+  @IsString()
   title: string;
 
-  @ApiProperty()
-  duration: number;
+  @ApiProperty({ type: [Number], required: false })
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  artists?: number[];
 
-  @ApiProperty()
-  addedAt: Date;
-
-  @ApiProperty()
-  artists: Artist[];
-
-  @ApiProperty()
-  tags: Tag[];
+  @ApiProperty({ type: [Number], required: false })
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  tags?: number[];
 
   @ApiProperty()
   sources: TrackSource[];
 
   @ApiProperty()
-  user_vetted: boolean;
+  @IsOptional()
+  user_vetted?: boolean;
 }
 
 export class UpdateTrackDto {
   @ApiProperty()
+  @IsOptional()
+  @IsString()
   fileName?: string;
 
   @ApiProperty()
+  @IsOptional()
+  @IsString()
   title?: string;
 
-  @ApiProperty()
-  artists?: Artist[];
+  @ApiProperty({ type: [Number], required: false })
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  artists?: number[];
+
+  @ApiProperty({ type: [Number], required: false })
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  tags?: number[];
 
   @ApiProperty()
-  tags?: Tag[];
+  @IsOptional()
+  @IsBoolean()
+  user_vetted?: boolean;
+}
 
-  @ApiProperty()
+export class ResponseTrackDto {
+  @Expose()
+  id: number;
+
+  @Expose()
+  fileName?: string;
+
+  @Expose()
+  duration: number;
+
+  @Expose()
+  addedAt: Date;
+
+  @Expose()
+  @Type(() => Artist)
+  artist: ResponseArtistDto[];
+
+  @Expose()
+  @Type(() => Tag)
+  tags: ResponseTagDto[];
+
+  @Expose()
+  @Type(() => TrackSource)
+  sources: TrackSource[];
+
+  @Expose()
   user_vetted: boolean;
 }

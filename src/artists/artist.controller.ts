@@ -3,19 +3,28 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpException,
   HttpStatus,
   Param,
   Patch,
   Post,
   Query,
+  UseInterceptors,
 } from '@nestjs/common';
-import { Artist } from './artist.entity';
 import { ArtistService } from './artist.service';
 import { StringToNumberarrayPipePipe } from '../common/string-to-numberarray.pipe';
-import { CreateArtistDto, UpdateArtistDto } from './artist.dto';
+import {
+  CreateArtistDto,
+  ResponseArtistDto,
+  UpdateArtistDto,
+} from './artist.dto';
 import { ApiParam } from '@nestjs/swagger';
+import { plainToInstance } from 'class-transformer';
+import { ResponseMessage } from '../common/decorators/response-message.decorator';
+import { ResponseInterceptor } from '../common/interceptors/response.interceptor';
 
+@UseInterceptors(ResponseInterceptor)
 @Controller('artists')
 export class ArtistController {
   constructor(private readonly artistService: ArtistService) {}
@@ -30,22 +39,24 @@ export class ArtistController {
    * @returns The Artist[] found, empty array if none
    */
   @Get()
+  @HttpCode(HttpStatus.OK)
   async getAllArtists(
     @Query('limit') limit: number | undefined,
     @Query('sort') sort: 'ASC' | 'DESC' | undefined,
     @Query('user_vetted') user_vetted: string | undefined,
     @Query('search') search: string | undefined,
-  ): Promise<Artist[]> {
+  ): Promise<ResponseArtistDto[]> {
     let userVettedBool = false;
     if (user_vetted && user_vetted === 'true') {
       userVettedBool = true;
     }
-    return await this.artistService.getAllArtists(
+    const artists = await this.artistService.getAllArtists(
       limit,
       sort,
       search,
       userVettedBool,
     );
+    return plainToInstance(ResponseArtistDto, artists);
   }
 
   /**
@@ -61,12 +72,15 @@ export class ArtistController {
     description: 'ID of the Artist',
   })
   @Get(':id')
-  async getArtistById(@Param() params: { id: number }): Promise<Artist> {
+  @HttpCode(HttpStatus.OK)
+  async getArtistById(
+    @Param() params: { id: number },
+  ): Promise<ResponseArtistDto> {
     const artist = await this.artistService.getById(params.id);
     if (!artist) {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
-    return artist;
+    return plainToInstance(ResponseArtistDto, artist);
   }
 
   /**
@@ -77,8 +91,12 @@ export class ArtistController {
    * @returns the found Artist or throws NOT_FOUND if not found.
    */
   @Post()
-  async createArtist(@Body() artistDto: CreateArtistDto): Promise<Artist> {
-    return await this.artistService.getOrCreateArtist(artistDto);
+  @HttpCode(201)
+  async createArtist(
+    @Body() artistDto: CreateArtistDto,
+  ): Promise<ResponseArtistDto> {
+    const artist = await this.artistService.getOrCreateArtist(artistDto);
+    return plainToInstance(ResponseArtistDto, artist);
   }
 
   /**
@@ -88,12 +106,12 @@ export class ArtistController {
    * @returns true if the Artist has successfully been removed, throws NOT_FOUND if Artist was not found.
    */
   @Delete(':id')
-  async deleteArtistById(@Param() params: { id: number }): Promise<boolean> {
+  @HttpCode(204)
+  async deleteArtistById(@Param() params: { id: number }): Promise<void> {
     const isDeleted = await this.artistService.deleteArtistById(params.id);
     if (!isDeleted) {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
-    return true;
   }
 
   /**
@@ -103,6 +121,7 @@ export class ArtistController {
    * @returns a message of how many Artist have been deleted and a number[] containing the IDs not deleted, if any
    */
   @Delete()
+  @HttpCode(204)
   async deleteArtists(
     @Query('ids', StringToNumberarrayPipePipe) ids: number[],
   ): Promise<object> {
@@ -126,6 +145,8 @@ export class ArtistController {
    * @param artistDto - The DTO containing the fields/values to be patched
    * @returns the newly modified Tag if it has been found & modified, throws NOT_FOUND otherwise
    */
+  @HttpCode(200)
+  @ResponseMessage('Artist updated')
   @Patch(':id')
   async updateArtistById(
     @Param() params: { id: number },
@@ -138,7 +159,7 @@ export class ArtistController {
     if (!artist) {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
-    return artist;
+    return plainToInstance(ResponseArtistDto, artist);
   }
 
   /**
