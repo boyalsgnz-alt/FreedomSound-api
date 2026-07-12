@@ -3,19 +3,23 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpException,
   HttpStatus,
   Param,
   Patch,
   Post,
   Query,
+  UseInterceptors,
 } from '@nestjs/common';
 import { TagService } from './tag.service';
-import { Tag } from './tag.entity';
 import { StringToNumberarrayPipePipe } from '../common/string-to-numberarray.pipe';
-import { CreateTagDto, UpdateTagDto } from './tag.dto';
+import { CreateTagDto, ResponseTagDto, UpdateTagDto } from './tag.dto';
 import { ApiBody } from '@nestjs/swagger';
+import { ResponseInterceptor } from '../common/interceptors/response.interceptor';
+import { plainToInstance } from 'class-transformer';
 
+@UseInterceptors(ResponseInterceptor)
 @Controller('tags')
 export class TagController {
   constructor(private readonly tagService: TagService) {}
@@ -27,12 +31,13 @@ export class TagController {
    * @returns the found Tag or throws NOT_FOUND if not found.
    */
   @Get(':id')
-  async getTagById(@Param() params: { id: number }): Promise<Tag> {
+  @HttpCode(HttpStatus.OK)
+  async getTagById(@Param() params: { id: number }): Promise<ResponseTagDto> {
     const tag = await this.tagService.getById(params.id);
     if (!tag) {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
-    return tag;
+    return plainToInstance(ResponseTagDto, tag);
   }
 
   /**
@@ -45,22 +50,24 @@ export class TagController {
    * @returns The Tag[] found, empty array if none
    */
   @Get()
+  @HttpCode(HttpStatus.OK)
   async getAllTags(
     @Query('limit') limit: number | undefined,
     @Query('sort') sort: 'ASC' | 'DESC' | undefined,
     @Query('user_vetted') user_vetted: string | undefined,
     @Query('search') search: string | undefined,
-  ): Promise<Tag[]> {
+  ): Promise<ResponseTagDto[]> {
     let userVettedBool = false;
     if (user_vetted && user_vetted === 'true') {
       userVettedBool = true;
     }
-    return await this.tagService.getAllTags(
+    const tags = await this.tagService.getAllTags(
       limit,
       sort,
       search,
       userVettedBool,
     );
+    return plainToInstance(ResponseTagDto, tags);
   }
 
   /**
@@ -71,8 +78,10 @@ export class TagController {
    * @returns The Tag created/retrieved
    */
   @Post()
-  async createTag(@Body() body: CreateTagDto): Promise<Tag> {
-    return await this.tagService.getOrCreateTag(body);
+  @HttpCode(HttpStatus.CREATED)
+  async createTag(@Body() body: CreateTagDto): Promise<ResponseTagDto> {
+    const tag = await this.tagService.getOrCreateTag(body);
+    return plainToInstance(ResponseTagDto, tag);
   }
 
   /**
@@ -82,12 +91,12 @@ export class TagController {
    * @returns true if the Tag has successfully been removed, throws NOT_FOUND otherwise
    */
   @Delete(':id')
-  async deleteTag(@Param() params: { id: number }): Promise<boolean> {
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteTag(@Param() params: { id: number }): Promise<void> {
     const isDeleted = await this.tagService.removeTag(params.id);
     if (!isDeleted) {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
-    return true;
   }
 
   /**
@@ -97,6 +106,7 @@ export class TagController {
    * @returns a message of how many Tag have been deleted and a number[] containing the IDs not deleted, if any
    */
   @Delete()
+  @HttpCode(HttpStatus.OK)
   async deleteTags(
     @Query('ids', StringToNumberarrayPipePipe) ids: number[],
   ): Promise<object> {
@@ -125,11 +135,11 @@ export class TagController {
   async patchTagById(
     @Param() params: { id: number },
     @Body() tagDto: UpdateTagDto,
-  ): Promise<Tag> {
+  ): Promise<ResponseTagDto> {
     const tag = await this.tagService.updateTag(params.id, tagDto);
     if (!tag) {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
-    return tag;
+    return plainToInstance(ResponseTagDto, tag);
   }
 }

@@ -17,7 +17,7 @@ export class CreateArtistDto {
 
   @ApiProperty({ default: false })
   @IsBoolean()
-  user_vetted: false;
+  user_vetted: boolean;
 
   @ApiProperty({ type: [Number], required: false })
   @IsOptional()
@@ -45,6 +45,9 @@ export class UpdateArtistDto {
 }
 
 export class ResponseArtistDto {
+  @Expose()
+  id: number;
+
   @Expose()
   name: string;
 

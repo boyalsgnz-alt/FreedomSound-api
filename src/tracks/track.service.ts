@@ -76,7 +76,6 @@ export class TrackService {
       }
       entity.tags = tagEntities;
     }
-    console.log(entity);
     return true;
   }
   async updateTrack(id: number, dto: UpdateTrackDto): Promise<boolean> {
