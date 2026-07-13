@@ -52,10 +52,10 @@ export class TagController {
   @Get()
   @HttpCode(HttpStatus.OK)
   async getAllTags(
-    @Query('limit') limit: number | undefined,
-    @Query('sort') sort: 'ASC' | 'DESC' | undefined,
-    @Query('user_vetted') user_vetted: string | undefined,
-    @Query('search') search: string | undefined,
+    @Query('limit') limit?: number | undefined,
+    @Query('sort') sort?: 'ASC' | 'DESC' | undefined,
+    @Query('user_vetted') user_vetted?: string | undefined,
+    @Query('search') search?: string | undefined,
   ): Promise<ResponseTagDto[]> {
     let userVettedBool = false;
     if (user_vetted && user_vetted === 'true') {
