@@ -13,7 +13,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { TagService } from './tag.service';
-import { StringToNumberarrayPipePipe } from '../common/string-to-numberarray.pipe';
+import { StringToNumberArrayPipe } from '../common/string-to-numberarray.pipe';
 import { CreateTagDto, ResponseTagDto, UpdateTagDto } from './tag.dto';
 import { ApiBody } from '@nestjs/swagger';
 import { ResponseInterceptor } from '../common/interceptors/response.interceptor';
@@ -108,7 +108,7 @@ export class TagController {
   @Delete()
   @HttpCode(HttpStatus.OK)
   async deleteTags(
-    @Query('ids', StringToNumberarrayPipePipe) ids: number[],
+    @Query('ids', StringToNumberArrayPipe) ids: number[],
   ): Promise<object> {
     const notDeleted: number[] = [];
     for (const tagId of ids) {
