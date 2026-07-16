@@ -6,12 +6,15 @@ import {
   HttpStatus,
   Param,
   Patch,
-  Query,
+  Query, UseInterceptors,
 } from '@nestjs/common';
 import { TrackService } from './track.service';
 import { Track } from './track.entity';
-import { UpdateTrackDto } from './track.dto';
+import { ResponseTrackDto, UpdateTrackDto } from './track.dto';
+import { plainToInstance } from 'class-transformer';
+import { ResponseInterceptor } from '../common/interceptors/response.interceptor';
 
+@UseInterceptors(ResponseInterceptor)
 @Controller('tracks')
 export class TrackController {
   constructor(private readonly trackService: TrackService) {}
@@ -22,12 +25,18 @@ export class TrackController {
     @Query('sort') sort: 'ASC' | 'DESC' | undefined,
     @Query('user_vetted') user_vetted: string | undefined,
     @Query('search') search: string | undefined,
-  ): Promise<Track[]> {
+  ): Promise<ResponseTrackDto[]> {
     let userVettedBool = false;
     if (user_vetted && user_vetted === 'true') {
       userVettedBool = true;
     }
-    return await this.trackService.getAll(limit, sort, userVettedBool, search);
+    const res = await this.trackService.getAll(
+      limit,
+      sort,
+      userVettedBool,
+      search,
+    );
+    return plainToInstance(ResponseTrackDto, res);
   }
 
   @Get(':id')

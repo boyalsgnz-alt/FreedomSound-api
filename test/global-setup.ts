@@ -2,18 +2,24 @@ import mysql from 'mysql2/promise';
 import * as dotenv from 'dotenv';
 
 export default async () => {
-  dotenv.config({ path: '.env.test' });
+  try {
+    dotenv.config({ path: '.env.test' });
 
-  const connection = await mysql.createConnection({
-    host: process.env.DATABASE_HOST,
-    port: Number(process.env.DATABASE_PORT),
-    user: process.env.DATABASE_USER,
-    password: process.env.DATABASE_PASSWORD,
-    // pas de "database" ici
-  });
+    const connection = await mysql.createConnection({
+      host: process.env.MYSQL_HOST,
+      port: Number(process.env.MYSQL_PORT),
+      user: process.env.MYSQL_USER,
+      password: process.env.MYSQL_PASSWORD,
+    });
 
-  const dbName = process.env.DATABASE_NAME;
-  await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``);
+    const dbName = process.env.MYSQL_ROOT_DBNAME;
+    await connection.query(
+      `CREATE DATABASE IF NOT EXISTS \`${dbName}\``,
+    );
 
-  await connection.end();
+    await connection.end();
+  } catch (err) {
+    console.error('globalSetup failed:', err);
+    throw err;
+  }
 };
