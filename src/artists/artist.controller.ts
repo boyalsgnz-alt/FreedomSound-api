@@ -13,7 +13,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ArtistService } from './artist.service';
-import { StringToNumberarrayPipePipe } from '../common/string-to-numberarray.pipe';
+import { StringToNumberArrayPipe } from '../common/string-to-numberarray.pipe';
 import {
   CreateArtistDto,
   ResponseArtistDto,
@@ -123,7 +123,7 @@ export class ArtistController {
   @Delete()
   @HttpCode(204)
   async deleteArtists(
-    @Query('ids', StringToNumberarrayPipePipe) ids: number[],
+    @Query('ids', StringToNumberArrayPipe) ids: number[],
   ): Promise<object> {
     const notDeleted: number[] = [];
     for (const artistId of ids) {

@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import fs from 'node:fs';
 import { execFile } from 'child_process';
 import { TrackService } from '../tracks/track.service';
-import NodeID3 from 'node-id3';
+import * as NodeID3 from 'node-id3';
 import { TrackSourceService } from '../tracksources/tracksource.service';
 import { ArtistService } from '../artists/artist.service';
 import { TagService } from '../tags/tag.service';
@@ -26,6 +26,10 @@ export class LocalFilesInterfaceService {
     private trackSourceRepo: Repository<TrackSource>,
   ) {}
 
+  /**
+   * Reads the ID3 tags of the song to extract the duration
+   * @param filePath - the path to the file to read ID3 tags from
+   */
   async getMp3Duration(filePath: string): Promise<number> {
     return new Promise((resolve, reject) => {
       execFile(
@@ -47,17 +51,23 @@ export class LocalFilesInterfaceService {
     });
   }
 
+  /**
+   * Adds local files to the DB. Either create them entirely or link them
+   * @param files - an array of objects containing the ID and filename of the track
+   */
   async addLocalFiles(
     files: { id: string; fileName: string }[],
   ): Promise<void> {
     const folderPath =
       this.configService.getOrThrow<string>('LOCAL_FILES_FOLDER');
     for (const file of files) {
+      // if the track is a local one, we skip the loop
       const trackEntity = await this.trackService.getByFileName(file.fileName);
       if (trackEntity) {
         continue;
       }
       const trackSource = await this.trackSourceService.getByScId(file.id);
+      // if the song doesn't exist in DB, we create it
       if (!trackSource) {
         const tags = NodeID3.read(`${folderPath}/${file.fileName}`);
         const { title, artist, genre } = tags;
@@ -93,6 +103,7 @@ export class LocalFilesInterfaceService {
           },
           ['platform'],
         );
+        // else we only link the local mp3 to the entry in db
       } else {
         const track = await this.trackService.getById(trackSource.track.id);
         track!.fileName = file.fileName;
@@ -101,6 +112,12 @@ export class LocalFilesInterfaceService {
     }
   }
 
+  /**
+   * Extracts the ID of the song (SC) present in the filename
+   *
+   * @param files - a string[] of the file name
+   * @returns an array of object containing the file path and the extracted ID
+   */
   mapFileToId(files: string[]): { id: string; fileName: string }[] {
     return files.map((it) => {
       if (it.lastIndexOf('[') === -1) {
@@ -116,15 +133,15 @@ export class LocalFilesInterfaceService {
     });
   }
 
+  /**
+   * Reads the dir defined via env var and gets all mp3 files
+   * @returns a string[] containing the file names
+   */
   loadAllFiles(): string[] {
     const folderPath =
       this.configService.getOrThrow<string>('LOCAL_FILES_FOLDER');
-    const files = fs.readdirSync(folderPath).map((fileName) => {
-      if (fileName.endsWith('.mp3')) {
-        return fileName;
-      }
-      return '';
-    });
+    const files = fs.readdirSync(folderPath)
+      .filter((fileName) => fileName.endsWith('.mp3'));
     return files;
   }
 }

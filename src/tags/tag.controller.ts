@@ -13,7 +13,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { TagService } from './tag.service';
-import { StringToNumberarrayPipePipe } from '../common/string-to-numberarray.pipe';
+import { StringToNumberArrayPipe } from '../common/string-to-numberarray.pipe';
 import { CreateTagDto, ResponseTagDto, UpdateTagDto } from './tag.dto';
 import { ApiBody } from '@nestjs/swagger';
 import { ResponseInterceptor } from '../common/interceptors/response.interceptor';
@@ -52,10 +52,10 @@ export class TagController {
   @Get()
   @HttpCode(HttpStatus.OK)
   async getAllTags(
-    @Query('limit') limit: number | undefined,
-    @Query('sort') sort: 'ASC' | 'DESC' | undefined,
-    @Query('user_vetted') user_vetted: string | undefined,
-    @Query('search') search: string | undefined,
+    @Query('limit') limit?: number | undefined,
+    @Query('sort') sort?: 'ASC' | 'DESC' | undefined,
+    @Query('user_vetted') user_vetted?: string | undefined,
+    @Query('search') search?: string | undefined,
   ): Promise<ResponseTagDto[]> {
     let userVettedBool = false;
     if (user_vetted && user_vetted === 'true') {
@@ -108,7 +108,7 @@ export class TagController {
   @Delete()
   @HttpCode(HttpStatus.OK)
   async deleteTags(
-    @Query('ids', StringToNumberarrayPipePipe) ids: number[],
+    @Query('ids', StringToNumberArrayPipe) ids: number[],
   ): Promise<object> {
     const notDeleted: number[] = [];
     for (const tagId of ids) {

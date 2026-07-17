@@ -1,7 +1,7 @@
 import { PipeTransform, Injectable } from '@nestjs/common';
 
 @Injectable()
-export class StringToNumberarrayPipePipe implements PipeTransform<
+export class StringToNumberArrayPipe implements PipeTransform<
   string,
   number[]
 > {

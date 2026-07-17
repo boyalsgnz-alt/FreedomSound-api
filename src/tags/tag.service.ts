@@ -15,20 +15,18 @@ export class TagService {
   ) {}
 
   async getAllTags(
-    limit: number | undefined,
-    sort: 'ASC' | 'DESC' | undefined,
-    search: string | undefined,
-    user_vetted: boolean | undefined,
+    limit?: number | undefined,
+    sort?: 'ASC' | 'DESC' | undefined,
+    search?: string | undefined,
+    user_vetted?: boolean | undefined,
   ): Promise<Tag[]> {
     return await this.tagRepo.find({
       where: {
-        user_vetted,
+        ...(user_vetted ? {user_vetted} : {}),
         ...(search ? { name: ILike(`%${search}%`) } : {}),
       },
-      take: limit,
-      order: {
-        name: sort,
-      },
+      ...(limit ? {take: limit}: {}),
+      ...(sort ? {order: {name: sort}}: {}),
       relations: {
         tracks: {
           artists: true,
@@ -69,7 +67,7 @@ export class TagService {
   }
 
   async updateTag(id: number, tagDto: UpdateTagDto): Promise<Tag | null> {
-    const tag = await this.tagRepo.findOneBy({ id });
+    let tag = await this.tagRepo.findOneBy({ id });
 
     if (!tag) {
       return null;
@@ -82,6 +80,7 @@ export class TagService {
       tag.tracks = await this.trackRepo.findBy({ id: In(tracks) });
     }
 
-    return this.tagRepo.save(tag);
+    tag = await this.tagRepo.save(tag);
+    return tag;
   }
 }
