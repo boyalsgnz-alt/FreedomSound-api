@@ -17,8 +17,9 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "migration:create": "typeorm"
+    "test:e2e": "jest --config ./test/jest-e2e.json --coverage --coverageDirectory=coverage-e2e --runInBand",
+    "migration:create": "typeorm",
+    "test:merge": "./merge-cov.sh"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

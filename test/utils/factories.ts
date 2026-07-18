@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm';
 import { Track } from '../../src/tracks/track.entity';
 import { Artist } from '../../src/artists/artist.entity';
+import { Tag } from '../../src/tags/tag.entity';
 
 export async function createTestTrack(
   dataSource: DataSource,
@@ -40,7 +41,7 @@ export async function createManyTestTracks(dataSource: DataSource): Promise<Trac
       title: `Test track ${count}`,
       fileName: `track${count}.mp3`,
       duration: 100,
-      user_vetted: false,
+      user_vetted: count % 2 === 0,
       addedAt: date,
       tags: [],
       artists: [],
@@ -51,4 +52,21 @@ export async function createManyTestTracks(dataSource: DataSource): Promise<Trac
     count += 1;
   }
   return tracks;
+}
+
+export async function createManyTestTags(dataSource: DataSource): Promise<Tag[]> {
+  let count = 0;
+  let tags: Tag[] = [];
+  const repo = dataSource.getRepository(Tag);
+  while (count !== 10) {
+    let tag = repo.create({
+      name: `Tag ${count}`,
+      user_vetted: count % 2 === 0,
+      tracks: [],
+    });
+    tag = await repo.save(tag);
+    tags.push(tag);
+    count += 1;
+  }
+  return tags;
 }

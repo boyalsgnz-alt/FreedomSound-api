@@ -33,7 +33,6 @@ describe('TrackController (e2e)', () => {
     const res = await request(app.getHttpServer())
       .get('/tracks?limit=3')
       .expect(200)
-    console.log(res.body);
       expect(res.body.data).toHaveLength(3);
   });
 });
