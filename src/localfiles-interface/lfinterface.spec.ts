@@ -56,7 +56,7 @@ describe('LocalFilesInterfaceService', () => {
             getOrThrow: jest
               .fn()
               .mockImplementation(
-                () => '/Users/gaetan/Downloads/Stacher Music',
+                () => '/some/path/on/local/machine',
               ),
           },
         },
