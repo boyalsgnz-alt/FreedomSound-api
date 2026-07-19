@@ -30,11 +30,32 @@ describe('PlaylistController', () => {
     await app.close();
   });
 
-  describe('GET /playlists/generate', () => {
-    it('should return a playlist of max 10 songs', async () => {
-      const res = await request(app.getHttpServer()).get('/playlists/generate').expect(200);
+  describe('POST /playlists/generate', () => {
+    it('should return a playlist matching artists', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/playlists/generate')
+        .send({
+          artists: [1, 2],
+          limit: 30,
+          onlyAvailableTracks: false
+        })
+        .expect(200);
+
+      // no artists have been linked in factories
+      expect(res.body).toHaveLength(0);
+    });
+
+    it('should return a playlist matching tags', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/playlists/generate')
+        .send({
+          tags: [1, 2],
+          limit: 30,
+          onlyAvailableTracks: false,
+        })
+        .expect(200);
 
       expect(res.body).toHaveLength(1);
-    })
-  })
-})
+    });
+  });
+});
