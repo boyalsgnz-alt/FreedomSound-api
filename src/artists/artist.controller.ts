@@ -59,6 +59,53 @@ export class ArtistController {
     return plainToInstance(ResponseArtistDto, artists);
   }
 
+  @HttpCode(204)
+  @ResponseMessage('Synchronization started')
+  @Get('synchronize')
+  async synchronizeArtists(): Promise<boolean> {
+    return await this.artistService.synchronizeArtists();
+  }
+
+  /**
+   * Removes Artist[] by their IDs and cleans up the relations, if any
+   *
+   * @param ids - The IDs of Artists to be removed
+   * @returns a message of how many Artist have been deleted and a number[] containing the IDs not deleted, if any
+   */
+  @Delete()
+  @HttpCode(200)
+  async deleteArtists(
+    @Query('ids', StringToNumberArrayPipe) ids: number[],
+  ): Promise<object> {
+    const notDeleted: number[] = [];
+    for (const artistId of ids) {
+      const isDeleted = await this.artistService.deleteArtistById(artistId);
+      if (!isDeleted) {
+        notDeleted.push(artistId);
+      }
+    }
+    return {
+      message: `Deleted ${ids.length - notDeleted.length} out of ${ids.length} artists`,
+      ...(notDeleted.length > 0 ? { notDeleted } : {}),
+    };
+  }
+
+  /**
+   * Creates an Artist of returns the existing Artist, if any
+   *
+   * @param artistDto - The Artist to be created
+   *
+   * @returns the found Artist or throws NOT_FOUND if not found.
+   */
+  @Post()
+  @HttpCode(201)
+  async createArtist(
+    @Body() artistDto: CreateArtistDto,
+  ): Promise<ResponseArtistDto> {
+    const artist = await this.artistService.getOrCreateArtist(artistDto);
+    return plainToInstance(ResponseArtistDto, artist);
+  }
+
   /**
    * Gets an Artist by its ID from the DB.
    *
@@ -84,58 +131,18 @@ export class ArtistController {
   }
 
   /**
-   * Creates an Artist of returns the existing Artist, if any
-   *
-   * @param artistDto - The Artist to be created
-   *
-   * @returns the found Artist or throws NOT_FOUND if not found.
-   */
-  @Post()
-  @HttpCode(201)
-  async createArtist(
-    @Body() artistDto: CreateArtistDto,
-  ): Promise<ResponseArtistDto> {
-    const artist = await this.artistService.getOrCreateArtist(artistDto);
-    return plainToInstance(ResponseArtistDto, artist);
-  }
-
-  /**
    * Removes an Artist by its ID and cleans up the relations, if any.
    *
    * @param params - Parameter in the request path, here, /:id
    * @returns true if the Artist has successfully been removed, throws NOT_FOUND if Artist was not found.
    */
-  @Delete(':id')
   @HttpCode(204)
+  @Delete(':id')
   async deleteArtistById(@Param() params: { id: number }): Promise<void> {
     const isDeleted = await this.artistService.deleteArtistById(params.id);
     if (!isDeleted) {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
-  }
-
-  /**
-   * Removes Artist[] by their IDs and cleans up the relations, if any
-   *
-   * @param ids - The IDs of Artists to be removed
-   * @returns a message of how many Artist have been deleted and a number[] containing the IDs not deleted, if any
-   */
-  @Delete()
-  @HttpCode(204)
-  async deleteArtists(
-    @Query('ids', StringToNumberArrayPipe) ids: number[],
-  ): Promise<object> {
-    const notDeleted: number[] = [];
-    for (const artistId of ids) {
-      const isDeleted = await this.artistService.deleteArtistById(artistId);
-      if (!isDeleted) {
-        notDeleted.push(artistId);
-      }
-    }
-    return {
-      message: `Deleted ${ids.length - notDeleted.length} out of ${ids.length} artists`,
-      ...(notDeleted.length > 0 ? { notDeleted } : {}),
-    };
   }
 
   /**
@@ -152,6 +159,7 @@ export class ArtistController {
     @Param() params: { id: number },
     @Body() artistDto: UpdateArtistDto,
   ): Promise<object> {
+    console.log('ISSOU');
     const artist = await this.artistService.patchArtistById(
       params.id,
       artistDto,
@@ -168,6 +176,8 @@ export class ArtistController {
    * @param params - The Artist entity ID to be decoupled
    * @returns a boolean indicating if the entity has been decoupled properly. Throws 500 if not
    */
+  @HttpCode(201)
+  @ResponseMessage('Artist decoupled')
   @Post(':id/decouple')
   async decoupleArtists(@Param() params: { id: number }): Promise<boolean> {
     const artistDecoupled = await this.artistService.decoupleArtists(params.id);
@@ -178,10 +188,5 @@ export class ArtistController {
       );
     }
     return artistDecoupled;
-  }
-
-  @Get('synchronize')
-  async synchronizeArtists(): Promise<boolean> {
-    return await this.artistService.synchronizeArtists();
   }
 }

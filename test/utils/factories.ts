@@ -1,39 +1,11 @@
-import { DataSource } from 'typeorm';
+import { DataSource, Entity } from 'typeorm';
 import { Track } from '../../src/tracks/track.entity';
 import { Artist } from '../../src/artists/artist.entity';
 import { Tag } from '../../src/tags/tag.entity';
+import { count } from 'rxjs';
 
-export async function createTestTrack(
-  dataSource: DataSource,
-  overrides: Partial<Track> = {},
-): Promise<Track> {
-  const repo = dataSource.getRepository(Track);
-  const track = repo.create({
-    title: 'Test track',
-    fileName: 'track.mp3',
-    duration: 100,
-    user_vetted: false,
-    ...overrides,
-  });
-  return repo.save(track);
-}
-
-export async function createTestArtist(
-  dataSource: DataSource,
-  overrides: Partial<Artist> = {},
-): Promise<Artist> {
-  const repo = dataSource.getRepository(Artist);
-  const artist = repo.create({
-    name: 'Test artist',
-    user_vetted: false,
-    tracks: [],
-  });
-  return repo.save(artist);
-}
-
-export async function createManyTestTracks(dataSource: DataSource): Promise<Track[]> {
+export async function createManyTestTracks(dataSource: DataSource): Promise<void> {
   let count = 0;
-  let tracks: Track[] = [];
   const date = new Date();
   const repo = dataSource.getRepository(Track);
   while (count !== 10) {
@@ -48,15 +20,12 @@ export async function createManyTestTracks(dataSource: DataSource): Promise<Trac
       sources: [],
     });
     track = await repo.save(track);
-    tracks.push(track);
     count += 1;
   }
-  return tracks;
 }
 
-export async function createManyTestTags(dataSource: DataSource): Promise<Tag[]> {
+export async function createManyTestTags(dataSource: DataSource): Promise<void> {
   let count = 0;
-  let tags: Tag[] = [];
   const repo = dataSource.getRepository(Tag);
   while (count !== 10) {
     let tag = repo.create({
@@ -65,8 +34,30 @@ export async function createManyTestTags(dataSource: DataSource): Promise<Tag[]>
       tracks: [],
     });
     tag = await repo.save(tag);
-    tags.push(tag);
     count += 1;
   }
-  return tags;
+}
+
+export async function createManyTestArtists(dataSource: DataSource): Promise<void> {
+  let count = 0;
+  const repo = dataSource.getRepository(Artist);
+  while (count !== 10) {
+    let artist = repo.create({
+      name: `Artist ${count}`,
+      user_vetted: count % 2 === 0,
+      tracks: []
+    });
+    artist = await repo.save(artist);
+    count += 1;
+  }
+}
+
+export async function createCoupledTestArtists(dataSource: DataSource): Promise<void> {
+  const repo = dataSource.getRepository(Artist);
+  let artist = repo.create({
+    name: 'Artist 11 x Artist 12 x Artist 13',
+    user_vetted: false,
+    tracks: []
+  });
+  await repo.save(artist);
 }
