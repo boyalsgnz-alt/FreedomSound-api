@@ -159,7 +159,6 @@ export class ArtistController {
     @Param() params: { id: number },
     @Body() artistDto: UpdateArtistDto,
   ): Promise<object> {
-    console.log('ISSOU');
     const artist = await this.artistService.patchArtistById(
       params.id,
       artistDto,

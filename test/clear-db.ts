@@ -15,5 +15,4 @@ export async function clearDatabase(dataSource: DataSource) {
 
 export async function debugDb(dataSource: DataSource) {
   const test = await dataSource.query("SELECT * FROM track");
-  console.log(test);
 }

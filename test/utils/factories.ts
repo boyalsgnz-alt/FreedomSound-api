@@ -1,8 +1,7 @@
-import { DataSource, Entity } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { Track } from '../../src/tracks/track.entity';
 import { Artist } from '../../src/artists/artist.entity';
 import { Tag } from '../../src/tags/tag.entity';
-import { count } from 'rxjs';
 
 export async function createManyTestTracks(dataSource: DataSource): Promise<void> {
   let count = 0;
@@ -60,4 +59,29 @@ export async function createCoupledTestArtists(dataSource: DataSource): Promise<
     tracks: []
   });
   await repo.save(artist);
+}
+
+export async function createFullMockDb(dataSource: DataSource): Promise<void> {
+  const trackRepo = dataSource.getRepository(Track);
+  await createManyTestTracks(dataSource);
+  await createManyTestTags(dataSource);
+
+  const tagRepo = dataSource.getRepository(Tag);
+
+  let tagDubstep = tagRepo.create({
+    name: `Dubstep`,
+    user_vetted: false,
+    tracks: [],
+  });
+  tagDubstep = await tagRepo.save(tagDubstep);
+
+  const tracks = await trackRepo.find();
+  const tags = await tagRepo.find();
+
+
+  tracks[0].tags = [tags[0], tags[1]];
+  tracks[1].tags = [tags[2], tagDubstep];
+
+  await trackRepo.save(tracks[0]);
+  await trackRepo.save(tracks[1]);
 }
