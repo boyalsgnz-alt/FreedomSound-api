@@ -27,6 +27,10 @@ function createMockQueryBuilder<T>(result: T) {
     limit: jest.fn().mockReturnThis(),
     getMany: jest.fn().mockResolvedValue(result),
     getOne: jest.fn().mockResolvedValue(result),
+    distinct: jest.fn().mockReturnThis(),
+    groupBy: jest.fn().mockReturnThis(),
+    addGroupBy: jest.fn().mockReturnThis(),
+    andHaving: jest.fn().mockReturnThis(),
   };
 }
 
@@ -53,16 +57,28 @@ describe('PlaylistService', () => {
 
   describe('generatePlaylist', () => {
     it('should generate a playlist', async () => {
-      const mockQueryBuilder = createMockQueryBuilder([mockTrack, {...mockTrack, title: 'Track 2'}]);
+      const mockQueryBuilder = createMockQueryBuilder([
+        {
+          ...mockTrack,
+          tags: [{ id: 1, name: 'tag test', user_vetted: false, tracks: [] }],
+        }
+      ]);
       jest
         .spyOn(trackRepo, 'createQueryBuilder')
         .mockReturnValue(mockQueryBuilder as any);
 
-      const result = await playlistService.generatePlaylist();
-      expect(result).toEqual([mockTrack, { ...mockTrack, title: 'Track 2' }]);
-      expect(mockQueryBuilder.where).toHaveBeenCalledWith('tag.name = :name', {
-        name: 'dubstep',
+      const result = await playlistService.generatePlaylist({
+        tags: [1],
+        limit: 30,
+        matchAllTags: true,
+        onlyAvailableTracks: false,
       });
+      expect(result).toEqual([
+        {
+          ...mockTrack,
+          tags: [{ id: 1, name: 'tag test', user_vetted: false, tracks: [] }],
+        },
+      ]);
     });
   });
 });
