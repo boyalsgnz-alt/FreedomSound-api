@@ -18,6 +18,9 @@ lerna-debug.log*
 # Tests
 /coverage
 /.nyc_output
+/coverage-e2e
+/coverage-merged
+/test/coverage-e2e
 
 # IDEs and editors
 /.idea
@@ -41,6 +44,7 @@ lerna-debug.log*
 .env.test.local
 .env.production.local
 .env.local
+.env.test
 
 # temp directory
 .temp
@@ -59,3 +63,5 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 src/soundcloud-interface/*.ts
 docker-compose.yml
 TODO.md
+merge-cov.sh
+merged-lcov.info

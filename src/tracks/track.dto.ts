@@ -81,6 +81,9 @@ export class ResponseTrackDto {
   fileName?: string;
 
   @Expose()
+  title: string;
+
+  @Expose()
   duration: number;
 
   @Expose()
@@ -88,7 +91,7 @@ export class ResponseTrackDto {
 
   @Expose()
   @Type(() => Artist)
-  artist: ResponseArtistDto[];
+  artists: ResponseArtistDto[];
 
   @Expose()
   @Type(() => Tag)
