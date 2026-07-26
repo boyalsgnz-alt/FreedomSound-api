@@ -57,15 +57,11 @@ export class TagController {
     @Query('user_vetted') user_vetted?: string | undefined,
     @Query('search') search?: string | undefined,
   ): Promise<ResponseTagDto[]> {
-    let userVettedBool = false;
-    if (user_vetted && user_vetted === 'true') {
-      userVettedBool = true;
-    }
     const tags = await this.tagService.getAllTags(
       limit,
       sort,
       search,
-      userVettedBool,
+      user_vetted,
     );
     return plainToInstance(ResponseTagDto, tags);
   }

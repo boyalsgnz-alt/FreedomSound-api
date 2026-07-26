@@ -18,11 +18,15 @@ export class TagService {
     limit?: number | undefined,
     sort?: 'ASC' | 'DESC' | undefined,
     search?: string | undefined,
-    user_vetted?: boolean | undefined,
+    user_vetted?: string | undefined,
   ): Promise<Tag[]> {
+    let userVetted = null;
+    if (user_vetted === 'false' || user_vetted === 'true') {
+      userVetted = JSON.parse(user_vetted.toLowerCase());
+    }
     return await this.tagRepo.find({
       where: {
-        ...(user_vetted ? { user_vetted } : {}),
+        ...(userVetted ? { user_vetted: userVetted } : {}),
         ...(search ? { name: ILike(`%${search}%`) } : {}),
       },
       ...(limit ? { take: limit } : {}),
@@ -97,7 +101,8 @@ export class TagService {
         continue;
       }
       tagEntity.name = tag.name || tagEntity.name;
-      tagEntity.user_vetted = tag.user_vetted !== undefined ? tag.user_vetted : tagEntity.user_vetted;
+      tagEntity.user_vetted =
+        tag.user_vetted !== undefined ? tag.user_vetted : tagEntity.user_vetted;
       await this.tagRepo.save(tagEntity);
     }
     return {

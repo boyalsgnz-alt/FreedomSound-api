@@ -26,14 +26,10 @@ export class TrackController {
     @Query('user_vetted') user_vetted: string | undefined,
     @Query('search') search: string | undefined,
   ): Promise<ResponseTrackDto[]> {
-    let userVettedBool = false;
-    if (user_vetted && user_vetted === 'true') {
-      userVettedBool = true;
-    }
     const res = await this.trackService.getAll(
       limit,
       sort,
-      userVettedBool,
+      user_vetted,
       search,
     );
     return plainToInstance(ResponseTrackDto, res);

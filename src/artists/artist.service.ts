@@ -21,10 +21,14 @@ export class ArtistService {
     limit: number | undefined,
     sort: 'ASC' | 'DESC' | undefined,
     search: string | undefined,
-    user_vetted: boolean | undefined,
+    user_vetted: string | undefined,
   ): Promise<Artist[]> {
+    let userVetted = null;
+    if (user_vetted === 'false' || user_vetted === 'true') {
+      userVetted = JSON.parse(user_vetted.toLowerCase());
+    }
     return await this.artistRepo.find({
-      where: { user_vetted, ...(search ? { name: ILike(`%${search}%`) } : {}) },
+      where: { ...(userVetted ? { user_vetted: userVetted } : {}) , ...(search ? { name: ILike(`%${search}%`) } : {}) },
       take: limit,
       order: { name: sort ?? 'ASC' },
       relations: { tracks: true },

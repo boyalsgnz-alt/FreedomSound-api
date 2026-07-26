@@ -46,15 +46,11 @@ export class ArtistController {
     @Query('user_vetted') user_vetted: string | undefined,
     @Query('search') search: string | undefined,
   ): Promise<ResponseArtistDto[]> {
-    let userVettedBool = false;
-    if (user_vetted && user_vetted === 'true') {
-      userVettedBool = true;
-    }
     const artists = await this.artistService.getAllArtists(
       limit,
       sort,
       search,
-      userVettedBool,
+      user_vetted,
     );
     return plainToInstance(ResponseArtistDto, artists);
   }
