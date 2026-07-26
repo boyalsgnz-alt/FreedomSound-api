@@ -74,10 +74,9 @@ export class ArtistService {
         unmodified.push(artist.id);
         continue;
       }
-      console.log(artistsObj);
-      // artEntity.name = artist.name || artEntity.name;
-      // artEntity.user_vetted = artist.user_vetted !== undefined ? artist.user_vetted : artEntity.user_vetted;
-      // await this.artistRepo.save(artEntity);
+      artEntity.name = artist.name || artEntity.name;
+      artEntity.user_vetted = artist.user_vetted !== undefined ? artist.user_vetted : artEntity.user_vetted;
+      await this.artistRepo.save(artEntity);
     }
     return {
       status: unmodified.length === 0 ? 'success' : 'partial',

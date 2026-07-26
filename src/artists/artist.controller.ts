@@ -98,7 +98,6 @@ export class ArtistController {
   @HttpCode(200)
   @Patch()
   async updateArtists(@Body() artists: UpdateArtistDto[]): Promise<object> {
-    console.log(artists);
     return await this.artistService.artistsBatchPatch(artists);
   }
 

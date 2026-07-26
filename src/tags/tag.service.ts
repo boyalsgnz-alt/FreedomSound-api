@@ -96,10 +96,9 @@ export class TagService {
         unmodified.push(tag.id);
         continue;
       }
-      console.log(tagsObj);
-      // tagEntity.name = tag.name || tagEntity.name;
-      // tagEntity.user_vetted = tag.user_vetted !== undefined ? tag.user_vetted : tagEntity.user_vetted;
-      // await this.tagRepo.save(tagEntity);
+      tagEntity.name = tag.name || tagEntity.name;
+      tagEntity.user_vetted = tag.user_vetted !== undefined ? tag.user_vetted : tagEntity.user_vetted;
+      await this.tagRepo.save(tagEntity);
     }
     return {
       status: unmodified.length === 0 ? 'success' : 'partial',

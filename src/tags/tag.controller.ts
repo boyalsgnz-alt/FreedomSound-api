@@ -92,7 +92,6 @@ export class TagController {
   @HttpCode(200)
   @Patch()
   async updateTags(@Body() tags: UpdateTagDto[]): Promise<object> {
-    console.log(tags);
     return await this.tagService.tagsBatchPatch(tags);
   }
 
