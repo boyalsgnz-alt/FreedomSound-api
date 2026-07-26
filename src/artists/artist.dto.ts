@@ -34,12 +34,12 @@ export class UpdateArtistDto {
   @ApiProperty()
   @IsOptional()
   @IsString()
-  name: string;
+  name?: string;
 
   @ApiProperty({ default: false })
   @IsOptional()
   @IsBoolean()
-  user_vetted: false;
+  user_vetted?: false;
 
   @ApiProperty({ type: [Number], required: false })
   @IsOptional()

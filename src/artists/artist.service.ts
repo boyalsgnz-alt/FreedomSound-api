@@ -65,18 +65,18 @@ export class ArtistService {
   async artistsBatchPatch(
     artistsObj: UpdateArtistDto[],
   ): Promise<{ status: string; message: string }> {
-    const unmodified: string[] = [];
+    const unmodified: number[] = [];
     for (const artist of artistsObj) {
       let artEntity = await this.artistRepo.findOne({
         where: { name: artist.name },
       });
       if (!artEntity) {
-        unmodified.push(artist.name);
+        unmodified.push(artist.id);
         continue;
       }
       console.log(artistsObj);
-      // artEntity.name = artist.name;
-      // artEntity.user_vetted = artist.user_vetted;
+      // artEntity.name = artist.name || artEntity.name;
+      // artEntity.user_vetted = artist.user_vetted !== undefined ? artist.user_vetted : artEntity.user_vetted;
       // await this.artistRepo.save(artEntity);
     }
     return {
@@ -84,7 +84,7 @@ export class ArtistService {
       message:
         unmodified.length === 0
           ? 'All artists have been updated'
-          : `${unmodified.reduce((init, acc) => `${init}, ${acc}`)} could not be updated`,
+          : `${unmodified.toString()} could not be updated`,
     };
   }
 

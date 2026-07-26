@@ -87,18 +87,18 @@ export class TagService {
   async tagsBatchPatch(
     tagsObj: UpdateTagDto[],
   ): Promise<{ status: string; message: string }> {
-    const unmodified: string[] = [];
+    const unmodified: number[] = [];
     for (const tag of tagsObj) {
       let tagEntity = await this.tagRepo.findOne({
         where: { name: tag.name },
       });
       if (!tagEntity) {
-        unmodified.push(tag.name);
+        unmodified.push(tag.id);
         continue;
       }
       console.log(tagsObj);
-      // tagEntity.name = tag.name;
-      // tagEntity.user_vetted = tag.user_vetted;
+      // tagEntity.name = tag.name || tagEntity.name;
+      // tagEntity.user_vetted = tag.user_vetted !== undefined ? tag.user_vetted : tagEntity.user_vetted;
       // await this.tagRepo.save(tagEntity);
     }
     return {
@@ -106,7 +106,7 @@ export class TagService {
       message:
         unmodified.length === 0
           ? 'All tags have been updated'
-          : `${unmodified.reduce((init, acc) => `${init}, ${acc}`)} could not be updated`,
+          : `${unmodified.toString()} could not be updated`,
     };
   }
 }
