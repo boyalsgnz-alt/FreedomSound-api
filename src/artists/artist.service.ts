@@ -21,10 +21,14 @@ export class ArtistService {
     limit: number | undefined,
     sort: 'ASC' | 'DESC' | undefined,
     search: string | undefined,
-    user_vetted: boolean | undefined,
+    user_vetted: string | undefined,
   ): Promise<Artist[]> {
+    let userVetted = null;
+    if (user_vetted === 'false' || user_vetted === 'true') {
+      userVetted = JSON.parse(user_vetted.toLowerCase());
+    }
     return await this.artistRepo.find({
-      where: { user_vetted, ...(search ? { name: ILike(`%${search}%`) } : {}) },
+      where: { ...(userVetted ? { user_vetted: userVetted } : {}) , ...(search ? { name: ILike(`%${search}%`) } : {}) },
       take: limit,
       order: { name: sort ?? 'ASC' },
       relations: { tracks: true },
@@ -60,6 +64,31 @@ export class ArtistService {
       return true;
     }
     return false;
+  }
+
+  async artistsBatchPatch(
+    artistsObj: UpdateArtistDto[],
+  ): Promise<{ status: string; message: string }> {
+    const unmodified: number[] = [];
+    for (const artist of artistsObj) {
+      let artEntity = await this.artistRepo.findOne({
+        where: { name: artist.name },
+      });
+      if (!artEntity) {
+        unmodified.push(artist.id);
+        continue;
+      }
+      artEntity.name = artist.name || artEntity.name;
+      artEntity.user_vetted = artist.user_vetted !== undefined ? artist.user_vetted : artEntity.user_vetted;
+      await this.artistRepo.save(artEntity);
+    }
+    return {
+      status: unmodified.length === 0 ? 'success' : 'partial',
+      message:
+        unmodified.length === 0
+          ? 'All artists have been updated'
+          : `${unmodified.toString()} could not be updated`,
+    };
   }
 
   async patchArtistById(

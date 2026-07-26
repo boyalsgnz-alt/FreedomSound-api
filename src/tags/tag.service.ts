@@ -18,15 +18,19 @@ export class TagService {
     limit?: number | undefined,
     sort?: 'ASC' | 'DESC' | undefined,
     search?: string | undefined,
-    user_vetted?: boolean | undefined,
+    user_vetted?: string | undefined,
   ): Promise<Tag[]> {
+    let userVetted = null;
+    if (user_vetted === 'false' || user_vetted === 'true') {
+      userVetted = JSON.parse(user_vetted.toLowerCase());
+    }
     return await this.tagRepo.find({
       where: {
-        ...(user_vetted ? {user_vetted} : {}),
+        ...(userVetted ? { user_vetted: userVetted } : {}),
         ...(search ? { name: ILike(`%${search}%`) } : {}),
       },
-      ...(limit ? {take: limit}: {}),
-      ...(sort ? {order: {name: sort}}: {}),
+      ...(limit ? { take: limit } : {}),
+      ...(sort ? { order: { name: sort } } : {}),
       relations: {
         tracks: {
           artists: true,
@@ -82,5 +86,31 @@ export class TagService {
 
     tag = await this.tagRepo.save(tag);
     return tag;
+  }
+
+  async tagsBatchPatch(
+    tagsObj: UpdateTagDto[],
+  ): Promise<{ status: string; message: string }> {
+    const unmodified: number[] = [];
+    for (const tag of tagsObj) {
+      let tagEntity = await this.tagRepo.findOne({
+        where: { name: tag.name },
+      });
+      if (!tagEntity) {
+        unmodified.push(tag.id);
+        continue;
+      }
+      tagEntity.name = tag.name || tagEntity.name;
+      tagEntity.user_vetted =
+        tag.user_vetted !== undefined ? tag.user_vetted : tagEntity.user_vetted;
+      await this.tagRepo.save(tagEntity);
+    }
+    return {
+      status: unmodified.length === 0 ? 'success' : 'partial',
+      message:
+        unmodified.length === 0
+          ? 'All tags have been updated'
+          : `${unmodified.toString()} could not be updated`,
+    };
   }
 }

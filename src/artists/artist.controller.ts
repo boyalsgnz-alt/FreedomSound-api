@@ -46,15 +46,11 @@ export class ArtistController {
     @Query('user_vetted') user_vetted: string | undefined,
     @Query('search') search: string | undefined,
   ): Promise<ResponseArtistDto[]> {
-    let userVettedBool = false;
-    if (user_vetted && user_vetted === 'true') {
-      userVettedBool = true;
-    }
     const artists = await this.artistService.getAllArtists(
       limit,
       sort,
       search,
-      userVettedBool,
+      user_vetted,
     );
     return plainToInstance(ResponseArtistDto, artists);
   }
@@ -88,6 +84,17 @@ export class ArtistController {
       message: `Deleted ${ids.length - notDeleted.length} out of ${ids.length} artists`,
       ...(notDeleted.length > 0 ? { notDeleted } : {}),
     };
+  }
+
+  /**
+   * Patches multiple artists in a batch manner. Cannot fail, it's either a success or a partial
+   * @param artists - an array of artists to modify, and their values
+   * @returns a custom message to inform the user if it was successful or partial
+   */
+  @HttpCode(200)
+  @Patch()
+  async updateArtists(@Body() artists: UpdateArtistDto[]): Promise<object> {
+    return await this.artistService.artistsBatchPatch(artists);
   }
 
   /**

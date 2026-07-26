@@ -27,12 +27,16 @@ export class TrackService {
   async getAll(
     limit: number | undefined,
     sort: 'ASC' | 'DESC' | undefined,
-    user_vetted: boolean | undefined,
+    user_vetted: string | undefined,
     search: string | undefined,
   ): Promise<Track[]> {
+    let userVetted = null;
+    if (user_vetted === 'false' || user_vetted === 'true') {
+      userVetted = JSON.parse(user_vetted.toLowerCase());
+    }
     return await this.trackRepo.find({
       where: {
-        ...(user_vetted && { user_vetted }),
+        ...(userVetted ? { user_vetted: userVetted } : {}),
         ...(search && { title: ILike(`%${search}%`) }),
       },
       ...(limit ? { take: limit } : {}),

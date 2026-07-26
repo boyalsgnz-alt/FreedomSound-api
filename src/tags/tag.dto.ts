@@ -27,6 +27,11 @@ export class CreateTagDto {
 }
 
 export class UpdateTagDto {
+
+  @ApiProperty()
+  @IsInt()
+  id: number;
+
   @ApiProperty()
   @IsOptional()
   @IsString()

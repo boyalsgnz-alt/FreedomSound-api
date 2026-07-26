@@ -57,15 +57,11 @@ export class TagController {
     @Query('user_vetted') user_vetted?: string | undefined,
     @Query('search') search?: string | undefined,
   ): Promise<ResponseTagDto[]> {
-    let userVettedBool = false;
-    if (user_vetted && user_vetted === 'true') {
-      userVettedBool = true;
-    }
     const tags = await this.tagService.getAllTags(
       limit,
       sort,
       search,
-      userVettedBool,
+      user_vetted,
     );
     return plainToInstance(ResponseTagDto, tags);
   }
@@ -82,6 +78,17 @@ export class TagController {
   async createTag(@Body() body: CreateTagDto): Promise<ResponseTagDto> {
     const tag = await this.tagService.getOrCreateTag(body);
     return plainToInstance(ResponseTagDto, tag);
+  }
+
+  /**
+   * Patches multiple tags in a batch manner. Cannot fail, it's either a success or a partial
+   * @param tags - an array of tags to modify, and their values
+   * @returns a custom message to inform the user if it was successful or partial
+   */
+  @HttpCode(200)
+  @Patch()
+  async updateTags(@Body() tags: UpdateTagDto[]): Promise<object> {
+    return await this.tagService.tagsBatchPatch(tags);
   }
 
   /**
