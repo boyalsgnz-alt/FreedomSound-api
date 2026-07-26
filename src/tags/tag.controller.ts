@@ -85,6 +85,18 @@ export class TagController {
   }
 
   /**
+   * Patches multiple tags in a batch manner. Cannot fail, it's either a success or a partial
+   * @param tags - an array of tags to modify, and their values
+   * @returns a custom message to inform the user if it was successful or partial
+   */
+  @HttpCode(200)
+  @Patch()
+  async updateTags(@Body() tags: UpdateTagDto[]): Promise<object> {
+    console.log(tags);
+    return await this.tagService.tagsBatchPatch(tags);
+  }
+
+  /**
    * Remove a Tag by its ID and cleans up the relations, if any.
    *
    * @param params - Parameter in the request path, here, /:id

@@ -22,11 +22,11 @@ export class TagService {
   ): Promise<Tag[]> {
     return await this.tagRepo.find({
       where: {
-        ...(user_vetted ? {user_vetted} : {}),
+        ...(user_vetted ? { user_vetted } : {}),
         ...(search ? { name: ILike(`%${search}%`) } : {}),
       },
-      ...(limit ? {take: limit}: {}),
-      ...(sort ? {order: {name: sort}}: {}),
+      ...(limit ? { take: limit } : {}),
+      ...(sort ? { order: { name: sort } } : {}),
       relations: {
         tracks: {
           artists: true,
@@ -82,5 +82,31 @@ export class TagService {
 
     tag = await this.tagRepo.save(tag);
     return tag;
+  }
+
+  async tagsBatchPatch(
+    tagsObj: UpdateTagDto[],
+  ): Promise<{ status: string; message: string }> {
+    const unmodified: string[] = [];
+    for (const tag of tagsObj) {
+      let tagEntity = await this.tagRepo.findOne({
+        where: { name: tag.name },
+      });
+      if (!tagEntity) {
+        unmodified.push(tag.name);
+        continue;
+      }
+      console.log(tagsObj);
+      // tagEntity.name = tag.name;
+      // tagEntity.user_vetted = tag.user_vetted;
+      // await this.tagRepo.save(tagEntity);
+    }
+    return {
+      status: unmodified.length === 0 ? 'success' : 'partial',
+      message:
+        unmodified.length === 0
+          ? 'All tags have been updated'
+          : `${unmodified.reduce((init, acc) => `${init}, ${acc}`)} could not be updated`,
+    };
   }
 }
