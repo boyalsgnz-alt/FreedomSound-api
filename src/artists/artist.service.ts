@@ -62,6 +62,32 @@ export class ArtistService {
     return false;
   }
 
+  async artistsBatchPatch(
+    artistsObj: UpdateArtistDto[],
+  ): Promise<{ status: string; message: string }> {
+    const unmodified: string[] = [];
+    for (const artist of artistsObj) {
+      let artEntity = await this.artistRepo.findOne({
+        where: { name: artist.name },
+      });
+      if (!artEntity) {
+        unmodified.push(artist.name);
+        continue;
+      }
+      console.log(artistsObj);
+      // artEntity.name = artist.name;
+      // artEntity.user_vetted = artist.user_vetted;
+      // await this.artistRepo.save(artEntity);
+    }
+    return {
+      status: unmodified.length === 0 ? 'success' : 'partial',
+      message:
+        unmodified.length === 0
+          ? 'All artists have been updated'
+          : `${unmodified.reduce((init, acc) => `${init}, ${acc}`)} could not be updated`,
+    };
+  }
+
   async patchArtistById(
     id: number,
     artistDto: UpdateArtistDto,

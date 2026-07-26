@@ -91,6 +91,18 @@ export class ArtistController {
   }
 
   /**
+   * Patches multiple artists in a batch manner. Cannot fail, it's either a success or a partial
+   * @param artists - an array of artists to modify, and their values
+   * @returns a custom message to inform the user if it was successful or partial
+   */
+  @HttpCode(200)
+  @Patch()
+  async updateArtists(@Body() artists: UpdateArtistDto[]): Promise<object> {
+    console.log(artists);
+    return await this.artistService.artistsBatchPatch(artists);
+  }
+
+  /**
    * Creates an Artist of returns the existing Artist, if any
    *
    * @param artistDto - The Artist to be created

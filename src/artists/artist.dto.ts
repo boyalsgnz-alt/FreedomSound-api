@@ -28,6 +28,10 @@ export class CreateArtistDto {
 
 export class UpdateArtistDto {
   @ApiProperty()
+  @IsInt()
+  id: number;
+
+  @ApiProperty()
   @IsOptional()
   @IsString()
   name: string;
