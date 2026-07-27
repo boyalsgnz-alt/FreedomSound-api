@@ -65,3 +65,5 @@ docker-compose.yml
 TODO.md
 merge-cov.sh
 merged-lcov.info
+transform-ids.sh
+get-songs.sh
