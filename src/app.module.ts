@@ -14,10 +14,13 @@ import { TagModule } from './tags/tag.module';
 import { LocalFilesInterfaceModule } from './localfiles-interface/lfinterface.module';
 import { TrackSourceModule } from './tracksources/tracksource.module';
 import { PlaylistModule } from './playlist/playlist.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { StatsModule } from './stats/stats.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    EventEmitterModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -39,6 +42,7 @@ import { PlaylistModule } from './playlist/playlist.module';
     LocalFilesInterfaceModule,
     TrackSourceModule,
     PlaylistModule,
+    StatsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
