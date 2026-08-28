@@ -67,7 +67,7 @@ export class PlaylistService {
     );
     try {
       await writeFile(
-        `./generate-playlists/${dto.fileName}.m3u`,
+        `./generated-playlists/${dto.fileName}.m3u`,
         `#EXTM3U\n#PLAYLIST: ${dto.playlistName}\n${strToWrite}`,
         { flag: 'w+' },
       );
