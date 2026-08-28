@@ -4,6 +4,7 @@ import { Track } from '../tracks/track.entity';
 import { Repository } from 'typeorm';
 import { PlaylistOptionsDto } from './playlist.dto';
 import { writeFile } from 'fs/promises';
+import path from 'node:path';
 
 @Injectable()
 export class PlaylistService {
@@ -11,6 +12,15 @@ export class PlaylistService {
     @InjectRepository(Track)
     private trackRepo: Repository<Track>,
   ) {}
+
+  private sanitizePlaylistFileName(fileName: string): string {
+    const baseName = path.basename(fileName).trim();
+    const sanitized = baseName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    if (!sanitized || sanitized === '.' || sanitized === '..') {
+      throw new InternalServerErrorException('Invalid playlist file name');
+    }
+    return sanitized;
+  }
 
   async generatePlaylist(dto: PlaylistOptionsDto): Promise<Track[]> {
     const qb = this.trackRepo
@@ -66,8 +76,14 @@ export class PlaylistService {
       '',
     );
     try {
+      const safeRoot = path.resolve('./generate-playlists');
+      const safeFileName = this.sanitizePlaylistFileName(dto.fileName);
+      const outputPath = path.resolve(safeRoot, `${safeFileName}.m3u`);
+      if (!outputPath.startsWith(`${safeRoot}${path.sep}`)) {
+        throw new InternalServerErrorException('Invalid output path');
+      }
       await writeFile(
-        `./generated-playlists/${dto.fileName}.m3u`,
+        outputPath,
         `#EXTM3U\n#PLAYLIST: ${dto.playlistName}\n${strToWrite}`,
         { flag: 'w+' },
       );
