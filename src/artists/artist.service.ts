@@ -124,7 +124,7 @@ export class ArtistService {
     }
 
     const regex = new RegExp(
-      /\s*(?:\bx\b|&|\bfeaturing\b|\bfeat\.|\bfeat\b|\bft\.|\bft\b|,)\s*/i,
+      /\s*(?:\bx\b|&|\bfeaturing\b|\bfeat\.|\bfeat\b|\bft\.|\bft\b|,|\band\b)\s*/i,
     );
     // retrieving tracks linked to the current artist
     const tracks: Track[] = [];

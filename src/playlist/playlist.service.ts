@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Track } from '../tracks/track.entity';
 import { Repository } from 'typeorm';
 import { PlaylistOptionsDto } from './playlist.dto';
+import { writeFile } from 'fs/promises';
+import path from 'node:path';
 
 @Injectable()
 export class PlaylistService {
@@ -10,6 +12,15 @@ export class PlaylistService {
     @InjectRepository(Track)
     private trackRepo: Repository<Track>,
   ) {}
+
+  private sanitizePlaylistFileName(fileName: string): string {
+    const baseName = path.basename(fileName).trim();
+    const sanitized = baseName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    if (!sanitized || sanitized === '.' || sanitized === '..') {
+      throw new InternalServerErrorException('Invalid playlist file name');
+    }
+    return sanitized;
+  }
 
   async generatePlaylist(dto: PlaylistOptionsDto): Promise<Track[]> {
     const qb = this.trackRepo
@@ -19,7 +30,7 @@ export class PlaylistService {
     let needsGroupBy = false;
 
     if (dto.onlyAvailableTracks) {
-      qb.where('track.fileName != ""')
+      qb.where('track.fileName != ""');
     }
 
     if (dto.tags?.length) {
@@ -53,11 +64,41 @@ export class PlaylistService {
       qb.distinct(true);
     }
 
-    qb.orderBy('RAND()')
+    qb.orderBy('RAND()');
 
     if (dto.limit) {
       qb.limit(dto.limit);
     }
+
+    const tracks = await qb.getMany();
+    const strToWrite = tracks.reduce(
+      (acc, curr) => `${acc}\n${encodeURI(curr.fileName!)}`,
+      '',
+    );
+    try {
+      const safeRoot = path.resolve('./generate-playlists');
+      const safeFileName = this.sanitizePlaylistFileName(dto.fileName);
+      const outputPath = path.resolve(safeRoot, `${safeFileName}.m3u`);
+      if (!outputPath.startsWith(`${safeRoot}${path.sep}`)) {
+        throw new InternalServerErrorException('Invalid output path');
+      }
+      await writeFile(
+        outputPath,
+        `#EXTM3U\n#PLAYLIST: ${dto.playlistName}\n${strToWrite}`,
+        { flag: 'w+' },
+      );
+    } catch (err) {
+      throw new InternalServerErrorException(err);
+    }
+    return tracks;
+  }
+
+  async playground() {
+    const qb = this.trackRepo
+      .createQueryBuilder('track')
+      .select(['track.fileName', 'track.id']);
+
+    qb.innerJoin('track.artists', 'artist', 'artist.id = 1182');
 
     const tracks = await qb.getMany();
     return tracks;

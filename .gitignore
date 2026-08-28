@@ -67,3 +67,4 @@ merged-lcov.info
 *.sh
 *.txt
 cookies.txt
+*.sql

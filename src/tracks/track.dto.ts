@@ -8,7 +8,6 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  ValidateNested,
 } from 'class-validator';
 import { Expose, Type } from 'class-transformer';
 import { ResponseArtistDto } from '../artists/artist.dto';
@@ -45,6 +44,10 @@ export class CreateTrackDto {
 }
 
 export class UpdateTrackDto {
+  @ApiProperty()
+  @IsInt()
+  id?: number;
+
   @ApiProperty()
   @IsOptional()
   @IsString()

@@ -102,7 +102,7 @@ export class ArtistController {
    *
    * @param artistDto - The Artist to be created
    *
-   * @returns the found Artist or throws NOT_FOUND if not found.
+   * @returns the found, or newly created, Artist.
    */
   @Post()
   @HttpCode(201)

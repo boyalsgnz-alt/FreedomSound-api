@@ -45,6 +45,9 @@ export class TrackService {
     });
   }
 
+  /**
+   * Function to retrieve a track by its filename. Returns null if track has not been found
+   */
   async getByFileName(fileName: string): Promise<Track | null> {
     return await this.trackRepo.findOne({
       where: { fileName },
@@ -52,6 +55,13 @@ export class TrackService {
     });
   }
 
+  /**
+   * Function to convert a track DTO to a track Entity.
+   *
+   * This function also puts the "user_vetted" flag of all the related Tags and Artists to true
+   * @param entity The Entity to modify
+   * @param dto The DTO received from external source
+   */
   async mapTrackDtoToEntity(
     entity: Track,
     dto: UpdateTrackDto,
@@ -69,6 +79,12 @@ export class TrackService {
         if (artistEntities.length !== dto.artists.length) {
           return false;
         }
+        for (const artEnt of artistEntities) {
+          if (!artEnt.user_vetted) {
+            artEnt.user_vetted = true;
+            await this.artistRepo.save(artEnt);
+          }
+        }
         entity.artists = artistEntities;
       }
     }
@@ -81,6 +97,12 @@ export class TrackService {
         });
         if (tagEntities.length !== dto.tags.length) {
           return false;
+        }
+        for (const tagEnt of tagEntities) {
+          if (!tagEnt.user_vetted) {
+            tagEnt.user_vetted = true;
+            await this.tagRepo.save(tagEnt);
+          }
         }
         entity.tags = tagEntities;
       }
@@ -95,5 +117,19 @@ export class TrackService {
       return false;
     }
     return await this.mapTrackDtoToEntity(track, dto);
+  }
+
+  async updateTracks(dtos: UpdateTrackDto[]): Promise<boolean> {
+    for (const trackObj of dtos) {
+      if (!trackObj.id) {
+        continue;
+      }
+      const track = await this.getById(trackObj.id);
+      if (!track) {
+        continue;
+      }
+      await this.mapTrackDtoToEntity(track, trackObj);
+    }
+    return true;
   }
 }

@@ -11,6 +11,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Track } from '../tracks/track.entity';
 import { Repository } from 'typeorm';
 import { Platform, TrackSource } from '../tracksources/tracksource.entity';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class LocalFilesInterfaceService {
@@ -24,6 +25,7 @@ export class LocalFilesInterfaceService {
     private trackRepo: Repository<Track>,
     @InjectRepository(TrackSource)
     private trackSourceRepo: Repository<TrackSource>,
+    private emitter: EventEmitter2,
   ) {}
 
   /**
@@ -60,6 +62,7 @@ export class LocalFilesInterfaceService {
   ): Promise<void> {
     const folderPath =
       this.configService.getOrThrow<string>('LOCAL_FILES_FOLDER');
+    this.emitter.emit('events', "Processing local files");
     for (const file of files) {
       // if the track is a local one, we skip the loop
       const trackEntity = await this.trackService.getByFileName(file.fileName);

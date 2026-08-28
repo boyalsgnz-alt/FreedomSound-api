@@ -19,6 +19,17 @@ import { ResponseInterceptor } from '../common/interceptors/response.interceptor
 export class TrackController {
   constructor(private readonly trackService: TrackService) {}
 
+  @Patch('')
+  async patchTracks(
+    @Body() body: UpdateTrackDto[],
+  ): Promise<boolean> {
+    const check = await this.trackService.updateTracks(body);
+    if (!check) {
+      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    }
+    return true;
+  }
+
   @Get()
   async getAllTracks(
     @Query('limit') limit: number | undefined,
