@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Track } from '../tracks/track.entity';
 import { Repository } from 'typeorm';
 import { PlaylistOptionsDto } from './playlist.dto';
+import { writeFile } from 'fs/promises';
 
 @Injectable()
 export class PlaylistService {
@@ -19,7 +20,7 @@ export class PlaylistService {
     let needsGroupBy = false;
 
     if (dto.onlyAvailableTracks) {
-      qb.where('track.fileName != ""')
+      qb.where('track.fileName != ""');
     }
 
     if (dto.tags?.length) {
@@ -53,11 +54,35 @@ export class PlaylistService {
       qb.distinct(true);
     }
 
-    qb.orderBy('RAND()')
+    qb.orderBy('RAND()');
 
     if (dto.limit) {
       qb.limit(dto.limit);
     }
+
+    const tracks = await qb.getMany();
+    const strToWrite = tracks.reduce(
+      (acc, curr) => `${acc}\n${encodeURI(curr.fileName!)}`,
+      '',
+    );
+    try {
+      await writeFile(
+        `./generate-playlists/${dto.fileName}.m3u`,
+        `#EXTM3U\n#PLAYLIST: ${dto.playlistName}\n${strToWrite}`,
+        { flag: 'w+' },
+      );
+    } catch (err) {
+      throw new InternalServerErrorException(err);
+    }
+    return tracks;
+  }
+
+  async playground() {
+    const qb = this.trackRepo
+      .createQueryBuilder('track')
+      .select(['track.fileName', 'track.id']);
+
+    qb.innerJoin('track.artists', 'artist', 'artist.id = 1182');
 
     const tracks = await qb.getMany();
     return tracks;

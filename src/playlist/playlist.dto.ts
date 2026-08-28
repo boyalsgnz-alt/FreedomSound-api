@@ -4,8 +4,8 @@ import {
   IsBoolean,
   IsNumber,
   IsOptional,
+  IsString,
 } from 'class-validator';
-
 
 export class PlaylistOptionsDto {
   @ApiProperty()
@@ -35,4 +35,12 @@ export class PlaylistOptionsDto {
   @ApiProperty()
   @IsBoolean()
   onlyAvailableTracks: boolean;
+
+  @ApiProperty()
+  @IsString()
+  playlistName: string;
+
+  @ApiProperty()
+  @IsString()
+  fileName: string;
 }
