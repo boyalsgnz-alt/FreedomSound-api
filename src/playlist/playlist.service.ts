@@ -71,6 +71,9 @@ export class PlaylistService {
     }
 
     const tracks = await qb.getMany();
+    if (!dto.generateFile) {
+      return tracks;
+    }
     const strToWrite = tracks.reduce(
       (acc, curr) => `${acc}\n${encodeURI(curr.fileName!)}`,
       '',
@@ -98,7 +101,7 @@ export class PlaylistService {
       .createQueryBuilder('track')
       .select(['track.fileName', 'track.id']);
 
-    qb.innerJoin('track.artists', 'artist', 'artist.id = 1182');
+    qb.innerJoin('track.artists', 'artist', 'artist.id = 2059');
 
     const tracks = await qb.getMany();
     return tracks;

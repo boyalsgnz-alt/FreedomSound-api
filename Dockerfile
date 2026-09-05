@@ -27,6 +27,6 @@ COPY --from=builder /usr/src/app/.env ./.env
 
 USER node
 
-EXPOSE 3000
+EXPOSE 3333
 
 CMD ["node", "dist/main.js"]

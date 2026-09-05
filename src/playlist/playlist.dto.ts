@@ -43,4 +43,8 @@ export class PlaylistOptionsDto {
   @ApiProperty()
   @IsString()
   fileName: string;
+
+  @ApiProperty()
+  @IsBoolean()
+  generateFile: boolean;
 }

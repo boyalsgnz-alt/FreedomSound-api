@@ -68,3 +68,9 @@ merged-lcov.info
 *.txt
 cookies.txt
 *.sql
+
+.env.docker
+.serverless
+generated-playlists/
+serverless.yml
+src/lambda.ts
