@@ -10,6 +10,7 @@ import { Track } from '../tracks/track.entity';
 import { In, Repository } from 'typeorm';
 import { Platform, TrackSource } from '../tracksources/tracksource.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { JOB_EVENT, JobName } from '../common/events/job-event';
 
 @Injectable()
 export class LocalFilesInterfaceService {
@@ -50,7 +51,10 @@ export class LocalFilesInterfaceService {
   }
 
   /**
-   * Adds local files to the DB. Either create them entirely or link them
+   * Adds local files to the DB. Either create them entirely or link them.
+   * Runs in the background: the caller gets an immediate ack, and JOB_EVENT is emitted on
+   * the shared EventEmitter2 (relayed to clients over the job-events WebSocket gateway) when
+   * processing starts, finishes, or fails.
    * @param files - an array of objects containing the ID and filename of the track
    */
   async addLocalFiles(
@@ -58,8 +62,33 @@ export class LocalFilesInterfaceService {
   ): Promise<void> {
     const folderPath =
       this.configService.getOrThrow<string>('LOCAL_FILES_FOLDER');
-    this.emitter.emit('events', 'Processing local files');
+    this.emitter.emit(JOB_EVENT, {
+      job: JobName.AddLocalFiles,
+      status: 'started',
+      message: 'Processing local files',
+    });
 
+    try {
+      await this.processLocalFiles(files, folderPath);
+      this.emitter.emit(JOB_EVENT, {
+        job: JobName.AddLocalFiles,
+        status: 'completed',
+        message: `Processed ${files.length} file(s)`,
+      });
+    } catch (err) {
+      this.emitter.emit(JOB_EVENT, {
+        job: JobName.AddLocalFiles,
+        status: 'failed',
+        message: err instanceof Error ? err.message : String(err),
+      });
+      throw err;
+    }
+  }
+
+  private async processLocalFiles(
+    files: { id: string; fileName: string }[],
+    folderPath: string,
+  ): Promise<void> {
     const fileNames = files.map((file) => file.fileName);
     const existingFileNames = new Set(
       fileNames.length

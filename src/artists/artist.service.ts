@@ -6,6 +6,8 @@ import { Artist } from './artist.entity';
 import { CreateArtistDto, UpdateArtistDto } from './artist.dto';
 import { Track } from '../tracks/track.entity';
 import NodeID3 from 'node-id3';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { JOB_EVENT, JobName } from '../common/events/job-event';
 
 @Injectable()
 export class ArtistService {
@@ -15,6 +17,7 @@ export class ArtistService {
     private artistRepo: Repository<Artist>,
     @InjectRepository(Track)
     private trackRepo: Repository<Track>,
+    private readonly emitter: EventEmitter2,
   ) {}
 
   async getAllArtists(
@@ -179,28 +182,46 @@ export class ArtistService {
    * Since the DB is the source of truth, we modify the artists on the UI but we have to sync
    * since the iOS app reads the metadata of the file to determine the artists.
    *
-   * The downside of this is we have to re-sync all the songs to the device manually, also taking time
+   * The downside of this is we have to re-sync all the songs to the device manually, also taking time.
+   * This runs in the background: the caller gets an immediate ack, and JOB_EVENT is emitted on the
+   * shared EventEmitter2 (relayed to clients over the job-events WebSocket gateway) when it finishes.
    */
-
-  // TODO: This is very heavy, use promises version of ID3 and return immediately
-  // TODO: Update the client via Sockets ?
   // TODO: Add a mechanism to know if this has been synchronized, to reduce read/write ops and thus time
-
   async synchronizeArtists(): Promise<boolean> {
-    const tracks = await this.trackRepo.find({ relations: { artists: true } });
-    for (const track of tracks) {
-      if (!track.fileName) {
-        continue;
+    this.emitter.emit(JOB_EVENT, {
+      job: JobName.SynchronizeArtists,
+      status: 'started',
+    });
+    try {
+      const tracks = await this.trackRepo.find({
+        relations: { artists: true },
+      });
+      for (const track of tracks) {
+        if (!track.fileName) {
+          continue;
+        }
+        const folderPath =
+          this.configService.getOrThrow<string>('LOCAL_FILES_FOLDER');
+        let tags = NodeID3.read(`${folderPath}/${track.fileName}`);
+        const artistsReduced = track.artists.reduce((initial, acc) => {
+          return `${initial}, ${acc.name}`;
+        }, '');
+        tags = { ...tags, artist: artistsReduced };
+        NodeID3.update(tags, `${folderPath}/${track.fileName}`);
       }
-      const folderPath =
-        this.configService.getOrThrow<string>('LOCAL_FILES_FOLDER');
-      let tags = NodeID3.read(`${folderPath}/${track.fileName}`);
-      const artistsReduced = track.artists.reduce((initial, acc) => {
-        return `${initial}, ${acc.name}`;
-      }, '');
-      tags = { ...tags, artist: artistsReduced };
-      NodeID3.update(tags, `${folderPath}/${track.fileName}`);
+      this.emitter.emit(JOB_EVENT, {
+        job: JobName.SynchronizeArtists,
+        status: 'completed',
+        message: `Synchronized ${tracks.length} track(s)`,
+      });
+      return true;
+    } catch (err) {
+      this.emitter.emit(JOB_EVENT, {
+        job: JobName.SynchronizeArtists,
+        status: 'failed',
+        message: err instanceof Error ? err.message : String(err),
+      });
+      throw err;
     }
-    return true;
   }
 }

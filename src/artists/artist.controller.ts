@@ -57,11 +57,15 @@ export class ArtistController {
     return plainToInstance(ResponseArtistDto, artists);
   }
 
-  @HttpCode(204)
+  /**
+   * Kicks off artist/ID3 synchronization in the background and returns immediately.
+   * Progress is reported via the job-events WebSocket gateway (see JOB_EVENT).
+   */
+  @HttpCode(202)
   @ResponseMessage('Synchronization started')
   @Post('synchronize')
-  async synchronizeArtists(): Promise<boolean> {
-    return await this.artistService.synchronizeArtists();
+  synchronizeArtists(): void {
+    void this.artistService.synchronizeArtists();
   }
 
   /**
