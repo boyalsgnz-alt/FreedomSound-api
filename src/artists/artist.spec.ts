@@ -6,6 +6,7 @@ import { Track } from '../tracks/track.entity';
 import { Artist } from './artist.entity';
 import { Repository } from 'typeorm';
 import NodeID3 from 'node-id3';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 jest.mock('node-id3');
 
@@ -42,7 +43,6 @@ describe('ArtistsService', () => {
   let configService: ConfigService;
 
   beforeEach(async () => {
-
     const module = await Test.createTestingModule({
       providers: [
         ConfigService,
@@ -50,8 +50,8 @@ describe('ArtistsService', () => {
         {
           provide: ConfigService,
           useValue: {
-            getOrThrow: jest.fn().mockImplementation(() => ('/some/path'))
-          }
+            getOrThrow: jest.fn().mockImplementation(() => '/some/path'),
+          },
         },
         {
           provide: getRepositoryToken(Track),
@@ -61,7 +61,7 @@ describe('ArtistsService', () => {
             findBy: jest.fn(),
             find: jest.fn(),
             save: jest.fn(),
-          }
+          },
         },
         {
           provide: getRepositoryToken(Artist),
@@ -72,9 +72,15 @@ describe('ArtistsService', () => {
             save: jest.fn(),
             delete: jest.fn(),
             find: jest.fn(),
-          }
-        }
-      ]
+          },
+        },
+        {
+          provide: EventEmitter2,
+          useValue: {
+            emit: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
     artistRepo = module.get(getRepositoryToken(Artist));
@@ -85,15 +91,15 @@ describe('ArtistsService', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
-  })
+  });
 
   describe('getAllArtists', () => {
     it('should return all artists in db', async () => {
       jest.spyOn(artistRepo, 'find').mockResolvedValueOnce(mockArtists);
-      const res = await artistService.getAllArtists(2, "DESC", "", false);
+      const res = await artistService.getAllArtists(2, 'DESC', '', false);
       expect(res).toEqual(mockArtists);
       expect(artistRepo.find).toHaveBeenCalled();
-    })
+    });
   });
 
   describe('getById', () => {
@@ -125,15 +131,21 @@ describe('ArtistsService', () => {
     it('should patch the artist and return the patched version', async () => {
       jest.spyOn(artistRepo, 'findOneBy').mockResolvedValueOnce(mockArtists[0]);
       jest.spyOn(trackRepo, 'findBy').mockResolvedValue([mockTrack]);
-      jest
-        .spyOn(artistRepo, 'save')
-        .mockResolvedValueOnce({
-          ...mockArtists[0],
-          name: 'Riot Virtual',
-          tracks: [mockTrack],
-        });
-      const res = await artistService.patchArtistById(1, {name: 'Riot Virtual', user_vetted: false, tracks: [1]});
-      expect(res).toEqual({...mockArtists[0], name: 'Riot Virtual', tracks: [mockTrack]});
+      jest.spyOn(artistRepo, 'save').mockResolvedValueOnce({
+        ...mockArtists[0],
+        name: 'Riot Virtual',
+        tracks: [mockTrack],
+      });
+      const res = await artistService.patchArtistById(1, {
+        name: 'Riot Virtual',
+        user_vetted: false,
+        tracks: [1],
+      });
+      expect(res).toEqual({
+        ...mockArtists[0],
+        name: 'Riot Virtual',
+        tracks: [mockTrack],
+      });
       expect(trackRepo.findBy).toHaveBeenCalled();
       expect(artistRepo.save).toHaveBeenCalled();
     });
@@ -151,7 +163,9 @@ describe('ArtistsService', () => {
 
   describe('decoupleArtists', () => {
     it('should split artists found from ID by a specific regex and make changes accordingly', async () => {
-      jest.spyOn(artistRepo, 'findOne').mockResolvedValueOnce(mockDecoupleArtist);
+      jest
+        .spyOn(artistRepo, 'findOne')
+        .mockResolvedValueOnce(mockDecoupleArtist);
       jest.spyOn(trackRepo, 'findOne').mockResolvedValue(mockTrack);
       jest.spyOn(artistService, 'getOrCreateArtist').mockResolvedValue({
         id: 1,
@@ -165,23 +179,19 @@ describe('ArtistsService', () => {
     });
 
     it('should return null if artist was not found', async () => {
-      jest
-        .spyOn(artistRepo, 'findOne')
-        .mockResolvedValueOnce(null);
+      jest.spyOn(artistRepo, 'findOne').mockResolvedValueOnce(null);
       const res = await artistService.decoupleArtists(2);
       expect(res).toBe(false);
     });
-  })
+  });
 
   describe('synchronizeArtists', () => {
     it('should update ID3 tags of actual .mp3', async () => {
-      jest
-        .spyOn(NodeID3, 'read')
-        .mockReturnValue({
-          artist: 'test',
-          title: 'track',
-          genre: 'dubstep',
-        } as any);
+      jest.spyOn(NodeID3, 'read').mockReturnValue({
+        artist: 'test',
+        title: 'track',
+        genre: 'dubstep',
+      } as any);
       jest.spyOn(NodeID3, 'update').mockReturnValue({
         artist: 'test',
         title: 'track',
@@ -196,5 +206,5 @@ describe('ArtistsService', () => {
       expect(res).toBe(true);
       expect(NodeID3.update).toHaveBeenCalledTimes(1);
     });
-  })
+  });
 });

@@ -16,6 +16,7 @@ import { TrackSourceModule } from './tracksources/tracksource.module';
 import { PlaylistModule } from './playlist/playlist.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { StatsModule } from './stats/stats.module';
+import { JobEventsModule } from './job-events/job-events.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { StatsModule } from './stats/stats.module';
     TrackSourceModule,
     PlaylistModule,
     StatsModule,
+    JobEventsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
