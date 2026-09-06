@@ -2,14 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import fs from 'node:fs';
 import { execFile } from 'child_process';
-import { TrackService } from '../tracks/track.service';
 import * as NodeID3 from 'node-id3';
-import { TrackSourceService } from '../tracksources/tracksource.service';
 import { ArtistService } from '../artists/artist.service';
 import { TagService } from '../tags/tag.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Track } from '../tracks/track.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Platform, TrackSource } from '../tracksources/tracksource.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
@@ -17,8 +15,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 export class LocalFilesInterfaceService {
   constructor(
     private readonly configService: ConfigService,
-    private readonly trackSourceService: TrackSourceService,
-    private readonly trackService: TrackService,
     private readonly artistService: ArtistService,
     private readonly tagService: TagService,
     @InjectRepository(Track)
@@ -62,14 +58,51 @@ export class LocalFilesInterfaceService {
   ): Promise<void> {
     const folderPath =
       this.configService.getOrThrow<string>('LOCAL_FILES_FOLDER');
-    this.emitter.emit('events', "Processing local files");
+    this.emitter.emit('events', 'Processing local files');
+
+    const fileNames = files.map((file) => file.fileName);
+    const existingFileNames = new Set(
+      fileNames.length
+        ? (
+            await this.trackRepo.find({ where: { fileName: In(fileNames) } })
+          ).map((track) => track.fileName)
+        : [],
+    );
+
+    const externalIds = [...new Set(files.map((file) => file.id))].filter(
+      (id) => id !== '',
+    );
+    const trackSourcesByExternalId = new Map(
+      externalIds.length
+        ? (
+            await this.trackSourceRepo.find({
+              where: { externalId: In(externalIds) },
+              relations: { track: true },
+            })
+          ).map((source) => [source.externalId, source])
+        : [],
+    );
+
+    const trackIdsToLink = [...trackSourcesByExternalId.values()].map(
+      (source) => source.track.id,
+    );
+    const tracksById = new Map(
+      trackIdsToLink.length
+        ? (
+            await this.trackRepo.find({
+              where: { id: In(trackIdsToLink) },
+              relations: { artists: true, tags: true },
+            })
+          ).map((track) => [track.id, track])
+        : [],
+    );
+
     for (const file of files) {
       // if the track is a local one, we skip the loop
-      const trackEntity = await this.trackService.getByFileName(file.fileName);
-      if (trackEntity) {
+      if (existingFileNames.has(file.fileName)) {
         continue;
       }
-      const trackSource = await this.trackSourceService.getByScId(file.id);
+      const trackSource = trackSourcesByExternalId.get(file.id);
       // if the song doesn't exist in DB, we create it
       if (!trackSource) {
         const tags = NodeID3.read(`${folderPath}/${file.fileName}`);
@@ -108,9 +141,12 @@ export class LocalFilesInterfaceService {
         );
         // else we only link the local mp3 to the entry in db
       } else {
-        const track = await this.trackService.getById(trackSource.track.id);
-        track!.fileName = file.fileName;
-        await this.trackRepo.save(track!);
+        const track = tracksById.get(trackSource.track.id);
+        if (!track) {
+          continue;
+        }
+        track.fileName = file.fileName;
+        await this.trackRepo.save(track);
       }
     }
   }
@@ -143,7 +179,8 @@ export class LocalFilesInterfaceService {
   loadAllFiles(): string[] {
     const folderPath =
       this.configService.getOrThrow<string>('LOCAL_FILES_FOLDER');
-    const files = fs.readdirSync(folderPath)
+    const files = fs
+      .readdirSync(folderPath)
       .filter((fileName) => fileName.endsWith('.mp3'));
     return files;
   }

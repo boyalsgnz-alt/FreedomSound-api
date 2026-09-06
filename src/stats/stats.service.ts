@@ -14,36 +14,27 @@ export class StatsService {
   ) {}
 
   async getTrackStats() {
-    const tracks = await this.trackRepo.find();
-    const stats = { missingFiles: 0, vetted: 0, total: tracks.length };
-    let counter = 0;
-    while (counter < tracks.length) {
-      if (tracks[counter].fileName === '') stats.missingFiles += 1;
-      if (tracks[counter].user_vetted) stats.vetted += 1;
-      counter += 1;
-    }
-    return stats;
+    const [total, vetted, missingFiles] = await Promise.all([
+      this.trackRepo.count(),
+      this.trackRepo.count({ where: { user_vetted: true } }),
+      this.trackRepo.count({ where: { fileName: '' } }),
+    ]);
+    return { missingFiles, vetted, total };
   }
 
   async getArtistStats() {
-    const artists = await this.artistRepo.find();
-    const stats = { vetted: 0, total: artists.length };
-    let counter = 0;
-    while (counter < artists.length) {
-      if (artists[counter].user_vetted) stats.vetted += 1;
-      counter += 1;
-    }
-    return stats;
+    const [total, vetted] = await Promise.all([
+      this.artistRepo.count(),
+      this.artistRepo.count({ where: { user_vetted: true } }),
+    ]);
+    return { vetted, total };
   }
 
   async getTagStats() {
-    const tags = await this.tagRepo.find();
-    const stats = { vetted: 0, total: tags.length };
-    let counter = 0;
-    while (counter < tags.length) {
-      if (tags[counter].user_vetted) stats.vetted += 1;
-      counter += 1;
-    }
-    return stats;
+    const [total, vetted] = await Promise.all([
+      this.tagRepo.count(),
+      this.tagRepo.count({ where: { user_vetted: true } }),
+    ]);
+    return { vetted, total };
   }
 }
