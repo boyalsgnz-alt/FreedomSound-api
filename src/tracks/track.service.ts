@@ -1,14 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Track } from './track.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, In, Repository } from 'typeorm';
 import { UpdateTrackDto } from './track.dto';
 import { Artist } from '../artists/artist.entity';
 import { Tag } from '../tags/tag.entity';
+import NodeID3 from 'node-id3';
 
 @Injectable()
 export class TrackService {
   constructor(
+    private readonly configService: ConfigService,
     @InjectRepository(Track)
     private trackRepo: Repository<Track>,
     @InjectRepository(Artist)
@@ -67,8 +70,8 @@ export class TrackService {
     dto: UpdateTrackDto,
   ): Promise<boolean> {
     if (dto.user_vetted !== undefined) entity.user_vetted = dto.user_vetted;
-    if (dto.title) entity.title = dto.title;
     if (dto.fileName) entity.fileName = dto.fileName;
+    if (dto.title) entity.title = dto.title;
     if (dto.artists !== undefined) {
       if (dto.artists.length === 0) {
         entity.artists = [];
@@ -106,6 +109,28 @@ export class TrackService {
         }
         entity.tags = tagEntities;
       }
+    }
+    if (
+      entity.fileName &&
+      (dto.title || dto.artists !== undefined || dto.tags !== undefined)
+    ) {
+      const folderPath =
+        this.configService.getOrThrow<string>('LOCAL_FILES_FOLDER');
+      const filePath = `${folderPath}/${entity.fileName}`;
+      const existingTags = NodeID3.read(filePath);
+      NodeID3.update(
+        {
+          ...existingTags,
+          ...(dto.title ? { title: dto.title } : {}),
+          ...(dto.artists !== undefined
+            ? { artist: entity.artists.map((a) => a.name).join(', ') }
+            : {}),
+          ...(dto.tags !== undefined
+            ? { genre: entity.tags.map((t) => t.name).join(', ') }
+            : {}),
+        },
+        filePath,
+      );
     }
     await this.trackRepo.save(entity);
     return true;

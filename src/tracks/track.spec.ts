@@ -1,11 +1,15 @@
 import { ILike, Repository } from 'typeorm';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { ConfigService } from '@nestjs/config';
 import { Track } from './track.entity';
 import { TrackService } from './track.service';
 import { Artist } from '../artists/artist.entity';
 import { ArtistModule } from '../artists/artist.module';
 import { Tag } from '../tags/tag.entity';
+import NodeID3 from 'node-id3';
+
+jest.mock('node-id3');
 
 const date = new Date();
 
@@ -26,11 +30,18 @@ describe('TrackService', () => {
   let trackRepo: Repository<Track>;
   let artistRepo: Repository<Artist>;
   let tagRepo: Repository<Tag>;
+  let configService: ConfigService;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       providers: [
         TrackService,
+        {
+          provide: ConfigService,
+          useValue: {
+            getOrThrow: jest.fn(),
+          },
+        },
         {
           provide: getRepositoryToken(Track),
           useValue: {
@@ -51,16 +62,16 @@ describe('TrackService', () => {
           provide: getRepositoryToken(Artist),
           useValue: {
             find: jest.fn(),
-          }
-        }
+          },
+        },
       ],
-
     }).compile();
 
     trackService = module.get(TrackService);
     trackRepo = module.get(getRepositoryToken(Track));
     artistRepo = module.get(getRepositoryToken(Artist));
     tagRepo = module.get(getRepositoryToken(Tag));
+    configService = module.get(ConfigService);
     jest.resetAllMocks();
   });
 
@@ -171,7 +182,9 @@ describe('TrackService', () => {
   describe('updateById', () => {
     it('should update the track found by id', async () => {
       jest.spyOn(trackRepo, 'findOne').mockResolvedValueOnce(mockTrack);
-      jest.spyOn(trackRepo, 'save').mockResolvedValueOnce({...mockTrack, title: 'Another title'})
+      jest
+        .spyOn(trackRepo, 'save')
+        .mockResolvedValueOnce({ ...mockTrack, title: 'Another title' });
 
       const result = await trackService.updateTrack(1, {
         ...mockTrack,
@@ -185,6 +198,77 @@ describe('TrackService', () => {
         ...mockTrack,
         title: 'Another title',
       });
+    });
+
+    it('should update the ID3 title tag of the linked file', async () => {
+      jest.spyOn(trackRepo, 'findOne').mockResolvedValueOnce(mockTrack);
+      jest
+        .spyOn(trackRepo, 'save')
+        .mockResolvedValueOnce({ ...mockTrack, title: 'Another title' });
+      jest.spyOn(configService, 'getOrThrow').mockReturnValue('/some/path');
+      jest.spyOn(NodeID3, 'read').mockReturnValue({
+        title: 'Test track',
+        artist: 'test',
+      } as any);
+      jest.spyOn(NodeID3, 'update').mockReturnValue(true as any);
+
+      await trackService.updateTrack(1, {
+        title: 'Another title',
+      });
+
+      expect(NodeID3.read).toHaveBeenCalledWith('/some/path/fake/path.mp3');
+      expect(NodeID3.update).toHaveBeenCalledWith(
+        { title: 'Another title', artist: 'test' },
+        '/some/path/fake/path.mp3',
+      );
+    });
+
+    it('should not touch ID3 tags when the track has no linked file', async () => {
+      jest
+        .spyOn(trackRepo, 'findOne')
+        .mockResolvedValueOnce({ ...mockTrack, fileName: '' });
+      jest.spyOn(trackRepo, 'save').mockResolvedValueOnce(mockTrack);
+
+      await trackService.updateTrack(1, {
+        ...mockTrack,
+        fileName: '',
+        title: 'Another title',
+      });
+
+      expect(NodeID3.update).not.toHaveBeenCalled();
+    });
+
+    it('should update the ID3 artist and genre tags of the linked file', async () => {
+      jest.spyOn(trackRepo, 'findOne').mockResolvedValueOnce(mockTrack);
+      jest.spyOn(trackRepo, 'save').mockResolvedValueOnce(mockTrack);
+      jest.spyOn(configService, 'getOrThrow').mockReturnValue('/some/path');
+      jest.spyOn(artistRepo, 'find').mockResolvedValueOnce([
+        { id: 1, name: 'Virtual Riot', tracks: [], user_vetted: true },
+        { id: 2, name: 'Infowler', tracks: [], user_vetted: true },
+      ]);
+      jest.spyOn(tagRepo, 'find').mockResolvedValueOnce([
+        { id: 1, name: 'dubstep', tracks: [], user_vetted: true },
+        { id: 2, name: 'energetic', tracks: [], user_vetted: true },
+      ]);
+      jest.spyOn(NodeID3, 'read').mockReturnValue({
+        title: 'Test track',
+        artist: 'someone else',
+      } as any);
+      jest.spyOn(NodeID3, 'update').mockReturnValue(true as any);
+
+      await trackService.updateTrack(1, {
+        artists: [1, 2],
+        tags: [1, 2],
+      });
+
+      expect(NodeID3.update).toHaveBeenCalledWith(
+        {
+          title: 'Test track',
+          artist: 'Virtual Riot, Infowler',
+          genre: 'dubstep, energetic',
+        },
+        '/some/path/fake/path.mp3',
+      );
     });
 
     it('should return false if the track is not found', async () => {
@@ -231,7 +315,11 @@ describe('TrackService', () => {
       },
       {
         params: {
-          track: { user_vetted: true, fileName: 'fake/path.mp3', title: 'new title' },
+          track: {
+            user_vetted: true,
+            fileName: 'fake/path.mp3',
+            title: 'new title',
+          },
           returnValue: false,
           mockArtist: [],
           mockTag: [],
@@ -275,4 +363,4 @@ describe('TrackService', () => {
       },
     );
   });
-})
+});
