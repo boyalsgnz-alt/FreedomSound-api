@@ -23,12 +23,15 @@ export class ArtistService {
     search: string | undefined,
     user_vetted: string | undefined,
   ): Promise<Artist[]> {
-    let userVetted = null;
+    let userVetted: boolean | null = null;
     if (user_vetted === 'false' || user_vetted === 'true') {
       userVetted = JSON.parse(user_vetted.toLowerCase());
     }
     return await this.artistRepo.find({
-      where: { ...(userVetted ? { user_vetted: userVetted } : {}) , ...(search ? { name: ILike(`%${search}%`) } : {}) },
+      where: {
+        ...(userVetted !== null ? { user_vetted: userVetted } : {}),
+        ...(search ? { name: ILike(`%${search}%`) } : {}),
+      },
       take: limit,
       order: { name: sort ?? 'ASC' },
       relations: { tracks: true },
@@ -41,7 +44,7 @@ export class ArtistService {
     if (!artist) {
       artist = await this.artistRepo.save({
         name: artistDto.name,
-        user_vetted: artistDto.user_vetted,
+        user_vetted: artistDto.user_vetted ?? false,
         tracks: [],
       });
     }
@@ -71,15 +74,18 @@ export class ArtistService {
   ): Promise<{ status: string; message: string }> {
     const unmodified: number[] = [];
     for (const artist of artistsObj) {
-      let artEntity = await this.artistRepo.findOne({
-        where: { name: artist.name },
+      const artEntity = await this.artistRepo.findOne({
+        where: { id: artist.id },
       });
       if (!artEntity) {
         unmodified.push(artist.id);
         continue;
       }
       artEntity.name = artist.name || artEntity.name;
-      artEntity.user_vetted = artist.user_vetted !== undefined ? artist.user_vetted : artEntity.user_vetted;
+      artEntity.user_vetted =
+        artist.user_vetted !== undefined
+          ? artist.user_vetted
+          : artEntity.user_vetted;
       await this.artistRepo.save(artEntity);
     }
     return {

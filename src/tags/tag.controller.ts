@@ -7,6 +7,7 @@ import {
   HttpException,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -32,8 +33,10 @@ export class TagController {
    */
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  async getTagById(@Param() params: { id: number }): Promise<ResponseTagDto> {
-    const tag = await this.tagService.getById(params.id);
+  async getTagById(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<ResponseTagDto> {
+    const tag = await this.tagService.getById(id);
     if (!tag) {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
@@ -52,7 +55,8 @@ export class TagController {
   @Get()
   @HttpCode(HttpStatus.OK)
   async getAllTags(
-    @Query('limit') limit?: number | undefined,
+    @Query('limit', new ParseIntPipe({ optional: true }))
+    limit?: number | undefined,
     @Query('sort') sort?: 'ASC' | 'DESC' | undefined,
     @Query('user_vetted') user_vetted?: string | undefined,
     @Query('search') search?: string | undefined,
@@ -99,8 +103,8 @@ export class TagController {
    */
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteTag(@Param() params: { id: number }): Promise<void> {
-    const isDeleted = await this.tagService.removeTag(params.id);
+  async deleteTag(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    const isDeleted = await this.tagService.removeTag(id);
     if (!isDeleted) {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
@@ -140,10 +144,10 @@ export class TagController {
   @ApiBody({ type: UpdateTagDto })
   @Patch(':id')
   async patchTagById(
-    @Param() params: { id: number },
+    @Param('id', ParseIntPipe) id: number,
     @Body() tagDto: UpdateTagDto,
   ): Promise<ResponseTagDto> {
-    const tag = await this.tagService.updateTag(params.id, tagDto);
+    const tag = await this.tagService.updateTag(id, tagDto);
     if (!tag) {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
