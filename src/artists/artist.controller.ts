@@ -57,7 +57,7 @@ export class ArtistController {
 
   @HttpCode(204)
   @ResponseMessage('Synchronization started')
-  @Get('synchronize')
+  @Post('synchronize')
   async synchronizeArtists(): Promise<boolean> {
     return await this.artistService.synchronizeArtists();
   }

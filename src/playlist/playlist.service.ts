@@ -1,4 +1,9 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Track } from '../tracks/track.entity';
 import { Repository } from 'typeorm';
@@ -8,6 +13,8 @@ import path from 'node:path';
 
 @Injectable()
 export class PlaylistService {
+  private readonly logger = new Logger(PlaylistService.name);
+
   constructor(
     @InjectRepository(Track)
     private trackRepo: Repository<Track>,
@@ -91,7 +98,14 @@ export class PlaylistService {
         { flag: 'w+' },
       );
     } catch (err) {
-      throw new InternalServerErrorException(err);
+      if (err instanceof HttpException) {
+        throw err;
+      }
+      this.logger.error(
+        'Failed to write playlist file',
+        err instanceof Error ? err.stack : err,
+      );
+      throw new InternalServerErrorException('Failed to write playlist file');
     }
     return tracks;
   }
