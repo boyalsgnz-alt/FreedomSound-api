@@ -15,9 +15,10 @@ export class CreateArtistDto {
   @IsString()
   name: string;
 
-  @ApiProperty({ default: false })
+  @ApiProperty({ default: false, required: false })
+  @IsOptional()
   @IsBoolean()
-  user_vetted: boolean;
+  user_vetted?: boolean;
 
   @ApiProperty({ type: [Number], required: false })
   @IsOptional()
@@ -39,7 +40,7 @@ export class UpdateArtistDto {
   @ApiProperty({ default: false })
   @IsOptional()
   @IsBoolean()
-  user_vetted?: false;
+  user_vetted?: boolean;
 
   @ApiProperty({ type: [Number], required: false })
   @IsOptional()

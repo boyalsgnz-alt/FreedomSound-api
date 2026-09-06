@@ -7,6 +7,7 @@ import {
   HttpException,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -41,7 +42,8 @@ export class ArtistController {
   @Get()
   @HttpCode(HttpStatus.OK)
   async getAllArtists(
-    @Query('limit') limit: number | undefined,
+    @Query('limit', new ParseIntPipe({ optional: true }))
+    limit: number | undefined,
     @Query('sort') sort: 'ASC' | 'DESC' | undefined,
     @Query('user_vetted') user_vetted: string | undefined,
     @Query('search') search: string | undefined,
@@ -128,9 +130,9 @@ export class ArtistController {
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   async getArtistById(
-    @Param() params: { id: number },
+    @Param('id', ParseIntPipe) id: number,
   ): Promise<ResponseArtistDto> {
-    const artist = await this.artistService.getById(params.id);
+    const artist = await this.artistService.getById(id);
     if (!artist) {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
@@ -145,8 +147,8 @@ export class ArtistController {
    */
   @HttpCode(204)
   @Delete(':id')
-  async deleteArtistById(@Param() params: { id: number }): Promise<void> {
-    const isDeleted = await this.artistService.deleteArtistById(params.id);
+  async deleteArtistById(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    const isDeleted = await this.artistService.deleteArtistById(id);
     if (!isDeleted) {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
@@ -163,13 +165,10 @@ export class ArtistController {
   @ResponseMessage('Artist updated')
   @Patch(':id')
   async updateArtistById(
-    @Param() params: { id: number },
+    @Param('id', ParseIntPipe) id: number,
     @Body() artistDto: UpdateArtistDto,
   ): Promise<object> {
-    const artist = await this.artistService.patchArtistById(
-      params.id,
-      artistDto,
-    );
+    const artist = await this.artistService.patchArtistById(id, artistDto);
     if (!artist) {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
@@ -185,8 +184,10 @@ export class ArtistController {
   @HttpCode(201)
   @ResponseMessage('Artist decoupled')
   @Post(':id/decouple')
-  async decoupleArtists(@Param() params: { id: number }): Promise<boolean> {
-    const artistDecoupled = await this.artistService.decoupleArtists(params.id);
+  async decoupleArtists(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<boolean> {
+    const artistDecoupled = await this.artistService.decoupleArtists(id);
     if (!artistDecoupled) {
       throw new HttpException(
         'Internal Server Error',

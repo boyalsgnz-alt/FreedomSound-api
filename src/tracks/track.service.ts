@@ -30,13 +30,13 @@ export class TrackService {
     user_vetted: string | undefined,
     search: string | undefined,
   ): Promise<Track[]> {
-    let userVetted = null;
+    let userVetted: boolean | null = null;
     if (user_vetted === 'false' || user_vetted === 'true') {
       userVetted = JSON.parse(user_vetted.toLowerCase());
     }
     return await this.trackRepo.find({
       where: {
-        ...(userVetted ? { user_vetted: userVetted } : {}),
+        ...(userVetted !== null ? { user_vetted: userVetted } : {}),
         ...(search && { title: ILike(`%${search}%`) }),
       },
       ...(limit ? { take: limit } : {}),

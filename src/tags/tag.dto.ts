@@ -15,9 +15,10 @@ export class CreateTagDto {
   @IsString()
   name: string;
 
-  @ApiProperty({ default: false })
+  @ApiProperty({ default: false, required: false })
+  @IsOptional()
   @IsBoolean()
-  user_vetted: boolean;
+  user_vetted?: boolean;
 
   @ApiProperty({ type: [Number], required: false })
   @IsOptional()
@@ -27,7 +28,6 @@ export class CreateTagDto {
 }
 
 export class UpdateTagDto {
-
   @ApiProperty()
   @IsInt()
   id: number;
@@ -50,6 +50,9 @@ export class UpdateTagDto {
 }
 
 export class ResponseTagDto {
+  @Expose()
+  id: number;
+
   @Expose()
   name: string;
 

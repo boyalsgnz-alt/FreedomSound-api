@@ -20,13 +20,13 @@ export class TagService {
     search?: string | undefined,
     user_vetted?: string | undefined,
   ): Promise<Tag[]> {
-    let userVetted = null;
+    let userVetted: boolean | null = null;
     if (user_vetted === 'false' || user_vetted === 'true') {
       userVetted = JSON.parse(user_vetted.toLowerCase());
     }
     return await this.tagRepo.find({
       where: {
-        ...(userVetted ? { user_vetted: userVetted } : {}),
+        ...(userVetted !== null ? { user_vetted: userVetted } : {}),
         ...(search ? { name: ILike(`%${search}%`) } : {}),
       },
       ...(limit ? { take: limit } : {}),
@@ -49,7 +49,7 @@ export class TagService {
     if (!tag) {
       tag = await this.tagRepo.save({
         name: tagDto.name,
-        user_vetted: tagDto.user_vetted,
+        user_vetted: tagDto.user_vetted ?? false,
         tracks: [],
       });
     }
@@ -93,8 +93,8 @@ export class TagService {
   ): Promise<{ status: string; message: string }> {
     const unmodified: number[] = [];
     for (const tag of tagsObj) {
-      let tagEntity = await this.tagRepo.findOne({
-        where: { name: tag.name },
+      const tagEntity = await this.tagRepo.findOne({
+        where: { id: tag.id },
       });
       if (!tagEntity) {
         unmodified.push(tag.id);

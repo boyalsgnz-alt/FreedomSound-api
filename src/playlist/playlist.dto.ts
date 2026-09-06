@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
   IsBoolean,
+  IsInt,
   IsNumber,
   IsOptional,
   IsString,
@@ -11,11 +12,13 @@ export class PlaylistOptionsDto {
   @ApiProperty()
   @IsOptional()
   @IsArray()
+  @IsInt({ each: true })
   tags?: number[];
 
   @ApiProperty()
   @IsOptional()
   @IsArray()
+  @IsInt({ each: true })
   artists?: number[];
 
   @ApiProperty()
