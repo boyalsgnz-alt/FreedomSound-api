@@ -3,7 +3,9 @@ import {
   Controller,
   Get,
   HttpCode,
+  HttpException,
   InternalServerErrorException,
+  Logger,
   Post,
 } from '@nestjs/common';
 import { PlaylistService } from './playlist.service';
@@ -11,6 +13,8 @@ import { PlaylistOptionsDto } from './playlist.dto';
 
 @Controller('playlists')
 export class PlaylistController {
+  private readonly logger = new Logger(PlaylistController.name);
+
   constructor(private readonly playlistService: PlaylistService) {}
 
   @HttpCode(200)
@@ -22,7 +26,14 @@ export class PlaylistController {
         (it) => it.fileName?.slice(it.fileName.lastIndexOf('/') + 1) || '',
       );
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(
+        'Failed to generate playlist',
+        error instanceof Error ? error.stack : error,
+      );
+      throw new InternalServerErrorException('Failed to generate playlist');
     }
   }
 
