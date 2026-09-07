@@ -4,6 +4,7 @@ export const JobName = {
   SynchronizeArtists: 'synchronize-artists',
   AddLocalFiles: 'add-local-files',
   UpsertTracks: 'upsert-tracks',
+  UpdateTracks: 'update-tracks',
 } as const;
 
 export type JobName = (typeof JobName)[keyof typeof JobName];

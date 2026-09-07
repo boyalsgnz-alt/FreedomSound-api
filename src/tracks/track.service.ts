@@ -7,6 +7,8 @@ import { UpdateTrackDto } from './track.dto';
 import { Artist } from '../artists/artist.entity';
 import { Tag } from '../tags/tag.entity';
 import NodeID3 from 'node-id3';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { JOB_EVENT, JobName } from '../common/events/job-event';
 
 @Injectable()
 export class TrackService {
@@ -18,6 +20,7 @@ export class TrackService {
     private artistRepo: Repository<Artist>,
     @InjectRepository(Tag)
     private tagRepo: Repository<Tag>,
+    private readonly emitter: EventEmitter2,
   ) {}
 
   async getById(id: number): Promise<Track | null> {
@@ -144,17 +147,40 @@ export class TrackService {
     return await this.mapTrackDtoToEntity(track, dto);
   }
 
+  /**
+   * Runs in the background: the caller gets an immediate ack, and JOB_EVENT is emitted on
+   * the shared EventEmitter2 (relayed to clients over the job-events WebSocket gateway) when
+   * processing starts, finishes, or fails.
+   */
   async updateTracks(dtos: UpdateTrackDto[]): Promise<boolean> {
-    for (const trackObj of dtos) {
-      if (!trackObj.id) {
-        continue;
+    this.emitter.emit(JOB_EVENT, {
+      job: JobName.UpdateTracks,
+      status: 'started',
+    });
+    try {
+      for (const trackObj of dtos) {
+        if (!trackObj.id) {
+          continue;
+        }
+        const track = await this.getById(trackObj.id);
+        if (!track) {
+          continue;
+        }
+        await this.mapTrackDtoToEntity(track, trackObj);
       }
-      const track = await this.getById(trackObj.id);
-      if (!track) {
-        continue;
-      }
-      await this.mapTrackDtoToEntity(track, trackObj);
+      this.emitter.emit(JOB_EVENT, {
+        job: JobName.UpdateTracks,
+        status: 'completed',
+        message: `Processed ${dtos.length} track(s)`,
+      });
+      return true;
+    } catch (err) {
+      this.emitter.emit(JOB_EVENT, {
+        job: JobName.UpdateTracks,
+        status: 'failed',
+        message: err instanceof Error ? err.message : String(err),
+      });
+      throw err;
     }
-    return true;
   }
 }

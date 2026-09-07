@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   HttpException,
   HttpStatus,
   Param,
@@ -15,19 +16,22 @@ import { Track } from './track.entity';
 import { ResponseTrackDto, UpdateTrackDto } from './track.dto';
 import { plainToInstance } from 'class-transformer';
 import { ResponseInterceptor } from '../common/interceptors/response.interceptor';
+import { ResponseMessage } from '../common/decorators/response-message.decorator';
 
 @UseInterceptors(ResponseInterceptor)
 @Controller('tracks')
 export class TrackController {
   constructor(private readonly trackService: TrackService) {}
 
+  /**
+   * Kicks off a batch track update in the background and returns immediately.
+   * Progress is reported via the job-events WebSocket gateway (see JOB_EVENT).
+   */
+  @HttpCode(202)
+  @ResponseMessage('Update started')
   @Patch('')
-  async patchTracks(@Body() body: UpdateTrackDto[]): Promise<boolean> {
-    const check = await this.trackService.updateTracks(body);
-    if (!check) {
-      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
-    }
-    return true;
+  patchTracks(@Body() body: UpdateTrackDto[]): void {
+    void this.trackService.updateTracks(body);
   }
 
   @Get()
