@@ -8,6 +8,7 @@ import { Artist } from '../artists/artist.entity';
 import { ArtistModule } from '../artists/artist.module';
 import { Tag } from '../tags/tag.entity';
 import NodeID3 from 'node-id3';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 jest.mock('node-id3');
 
@@ -62,6 +63,12 @@ describe('TrackService', () => {
           provide: getRepositoryToken(Artist),
           useValue: {
             find: jest.fn(),
+          },
+        },
+        {
+          provide: EventEmitter2,
+          useValue: {
+            emit: jest.fn(),
           },
         },
       ],
@@ -362,5 +369,47 @@ describe('TrackService', () => {
         }
       },
     );
+  });
+
+  describe('updateTracks', () => {
+    let emitter: EventEmitter2;
+
+    beforeEach(() => {
+      emitter = (trackService as any).emitter;
+    });
+
+    it('should emit started and completed job events', async () => {
+      jest.spyOn(trackRepo, 'findOne').mockResolvedValueOnce(mockTrack);
+      jest.spyOn(trackRepo, 'save').mockResolvedValueOnce(mockTrack);
+
+      const result = await trackService.updateTracks([
+        { id: 1, title: 'Another title' },
+      ]);
+
+      expect(result).toBe(true);
+      expect(emitter.emit).toHaveBeenNthCalledWith(1, 'job.status', {
+        job: 'update-tracks',
+        status: 'started',
+      });
+      expect(emitter.emit).toHaveBeenNthCalledWith(2, 'job.status', {
+        job: 'update-tracks',
+        status: 'completed',
+        message: 'Processed 1 track(s)',
+      });
+    });
+
+    it('should emit a failed job event and rethrow if processing throws', async () => {
+      jest.spyOn(trackRepo, 'findOne').mockRejectedValueOnce(new Error('boom'));
+
+      await expect(
+        trackService.updateTracks([{ id: 1, title: 'Another title' }]),
+      ).rejects.toThrow('boom');
+
+      expect(emitter.emit).toHaveBeenNthCalledWith(2, 'job.status', {
+        job: 'update-tracks',
+        status: 'failed',
+        message: 'boom',
+      });
+    });
   });
 });
